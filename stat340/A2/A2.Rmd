@@ -1,0 +1,264 @@
+---
+title: "stat340_A2"
+author: "Mark Lin"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Assignment 2
+## Q1a)
+We can use the composition method since $\sum_{k=1}^\infty\frac{1}{2^k}=1$.
+$$
+F_k^\leftarrow(y) = \Bigg\lceil\frac{ln(1-x)}{ln(\frac{1}{k+1})}\Bigg\rceil
+$$
+We can use the following sampling algorithm:  
+1) Sample $V,U\sim U(0,1)$ and set
+$$
+z=\begin{cases}
+1,&\ V\in(0,\frac{1}{2}] \\
+2,&\ V\in(\frac{1}{2},\frac{3}{4}] \\
+\vdots
+\end{cases}
+$$
+2) Return $X = F_z^\leftarrow(U) = \Big\lceil\frac{ln(1 - U)}{ln(\frac{1}{z+1})}\Big\rceil$
+
+##Q1b)
+We have $F(x)=e^{\frac{-1}{x}} - e^{-\frac{1}{x}}\cdot2^{-x}=e^{-\frac{1}{x}}(1-2^{-x})\quad x>0$  
+Now we have $F(x)=F_1(x)F_2(x)$, as $F_1,F_2$ are both valid CDFs, we can find the quantile functions:
+$$
+F_1^-(y) = -\frac{1}{log(U)}
+F_2^-(y) = -\frac{log(1-V)}{log(2)}
+$$
+By Lemma 3.10 from the course notes:
+Algorithm:  
+1) Sample $V,U\sim U(0,1)$  
+2) Compute $X_1=-\frac{1}{log(U)}, X_2=-\frac{log(1 - V)}{log(2)}$  
+3) Return $max\{X_1,X_2\}$
+
+\newpage
+
+## Q2)
+$T=(0, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 4)^T$ be a table of length 20.  
+Now randomly draw an element from $T$ via $T_N$ for $N\sim(U\{1,\ldots,20\})$  
+Return $T_N$
+
+\newpage
+
+## Q3a)
+We know $N=n$ iff $T_n \leq \lambda$. Where $T_n$ is sum of the first n
+interarrival times between events. This means that $N = n$ if there are n events
+within $[0, \lambda]$. So, 
+$$
+A_1 + A_2 + \ldots + A_n \leq\lambda
+$$
+$$
+-log(U_1 \times U_2 \times \ldots \times U_n) \leq\lambda \quad(1)
+$$
+We also have:
+$$
+P_n = U_1\cdot U_2 \cdot U_2 \cdot\ldots\cdot U_n = \prod_{j=1}^n U_j
+$$
+$$
+log(P_n) = \sum_{j=1}^nlog(U_j) = -T_n
+$$
+Plugging this into (1), we get:
+$$
+T_n \geq -\lambda
+$$
+$$
+P_n \geq e^{-\lambda} > P_{n+1}
+$$
+as expected. We know $e^{-\lambda} > P_{n+1}$ due to the decreasing nature of
+P, since we are multiplying values that are $[0,1]$.
+
+If $P_n \geq e^{-\lambda} > P_{n+1}$, then we have $U_1\cdot U_2\cdot \ldots\cdot U_n\geq e^{-\lambda}>U_1\cdot U_2\cdot \dots\cdot U_n\cdot U_{n+1}$. This implies that $\sum_{j=1}^n A_j \leq \lambda < \sum_{j=1}^{n+1} A_j$ implies $T_n \leq \lambda < T_{n+1}$. Since $T_n$ is the sum of the first n interrarival times, and $T_n < \lambda$, then $\lambda < T_{n+1}$ follows since for there to be n+1 events, their sum must exceed $\lambda$.
+
+## Q3b)
+### i)
+```{r}
+set.seed(123)
+sample <- function(lambda) {
+  P <- 1
+  N <- 0
+  c = exp(-lambda)
+  while (P >= c) {
+    u <- runif(1)
+    P <- P * u
+    N <- N + 1
+  }
+  N - 1
+}
+
+data <- replicate(10000, sample(2))
+hist(data, main="Samples from Poi(2)", xlab="# of Events",freq=FALSE,breaks=10)
+x <- seq(0,10,by=1)
+lines(x, dpois(x, 2),lwd=2,col="red")
+# curve(dpois(x, 2), add=TRUE,col="red")
+```
+
+### ii)
+```{r}
+mean <- mean(data)
+var <- var(data)
+cat("mean: ", mean, "\n")
+cat("var: ", var)
+```
+Our computed mean and var are close to the theoretical mean and var of 2 for a 
+Poisson distribution.
+
+## Q3c)
+```{r}
+start <- Sys.time()
+data <- replicate(10000, sample(2))
+end <- Sys.time()
+print(end - start)
+start <- Sys.time()
+data <- qpois(10000,2)
+end <- Sys.time()
+print(end - start)
+```
+
+\newpage
+
+## Q4a)
+First we must show that $f(x)\leq h_1(x)$ over the interval $x\in[0,\frac{1}{2}]$. This is the same as proving:
+$$
+x^{\alpha-1}(1-x)^{\alpha-1}\leq\Big(\frac{x}{2}\Big)^{\alpha-1}
+$$
+$$
+(1-x)^{\alpha-1}\leq\Big(\frac{1}{2}\Big)^{\alpha-1}
+$$
+
+We can notice that from our interval 0 to 0.5 that $(1-x)$ decreases over the
+interval which means $f(x)$ gets smaller as we move along the interval while
+$h_1(x)$ remains constant. Therefore, if we can establish that
+$f(x)\leq h_1(x)$ then it must hold true for the entire interval. Doing this
+we find that:
+
+$f(x)=1$  
+$h_1(x)=[1,2]\;(\text{dependent on }\alpha)$
+
+Therefore, we now know $f(x)\leq h_1(x)$
+
+Now we will compute
+$$
+\int_0^{\frac{1}{2}}h_1(x)dx = \int_0^{\frac{1}{2}}c_\alpha x^{\alpha-1}dx
+=\frac{c_\alpha}{2^{\alpha-1}}\int_0^{\frac{1}{2}}x^{\alpha-1}dx=
+\frac{c_\alpha}{2^{2\alpha - 1}\alpha}
+$$
+
+## Q4b)
+Given the symmetrical nature of f, we can simply mirror $h_1(x)$ across $y=0.5$
+to get $h_2(x)=c_\alpha\big(\frac{1-x}{2}\big)^{\alpha-1}$
+
+## Q4c)
+We have
+$$
+f(x) = c_\alpha x^{\alpha - 1}(1-x)^{\alpha-1}
+$$
+$$
+h(x) = \begin{cases}
+c_\alpha\Big(\frac{x}{2}\Big)^{\alpha-1},&\ \text{if }x\in[0,\frac{1}{2}] \\
+c_\alpha\Big(\frac{1-x}{2})\Big)^{\alpha-1},&\ \text{if }x\in[\frac{1}{2},1]
+\end{cases}
+$$
+Next we will find c by taking the integral of $h(x)$
+$$
+c=\frac{c_\alpha}{2^{\alpha-1}}\Bigg(\int_0^{\frac{1}{2}}x^{\alpha-1} + \int_{\frac{1}{2}}^1(1-x)^{\alpha-1}\Bigg)dx
+$$
+$$
+c=\frac{c_\alpha}{2^{\alpha-1}}\times\frac{2^{1-\alpha}}{\alpha}
+$$
+Now we find $g(x)$ by dividing $h(x)$ by $c$.
+$$
+g(x) = \begin{cases}
+\frac{c_\alpha\frac{x}{2}^{\alpha-1}}{c}=2^{\alpha-1}\alpha x^{\alpha-1} &\ \text{if }x\in[0,\frac{1}{2}] \\
+\frac{c_\alpha\frac{1-x}{2}^{\alpha-1}}{c}=2^{\alpha-1}\alpha (1-x)^{\alpha-1}
+&\ \text{if }x\in[\frac{1}{2},1]
+\end{cases}
+$$
+
+We can rearrange this using composition method to get $pg_1(x)(1-p)g_2(x).  
+$p=2^{\alpha-1}\alpha = 1-p$  
+$g_1(x) = 2^{\alpha-1}\alpha x^{\alpha-1}$  
+$g_2(x)=2^{\alpha-1}\alpha (1-x)^{\alpha-1}$
+
+## Q4d)
+Suppose $Y=U_1^{1/\alpha}/2$ does not correctly sample from $g_1$ and that
+$Y=1-U_1^{1/\alpha}/2$ does not sample correctly from $g_2$.
+
+
+## Q4e)
+$U_3$ is used for choosing $g_1$ or $g_2$.
+
+## Q4f)
+$U_2$ is used to perform the acceptance-rejection step.  
+We have
+$$
+U_2 \leq \frac{f(Y)}{h(Y)} = \frac{c_\alpha x^{\alpha-1}(1-Y)^{\alpha-1}}{c_\alpha(\frac{Y}{2})^{\alpha-1}} = (2(1-Y))^{\alpha-1}
+$$
+for $h_1(x)$. This holds for $h_2(x)$ due to the symmetry of $f$. Thus, holds
+for $h(x)$.
+
+## Q4g)
+```{r}
+sample <- function(alpha) {
+  repeat {
+    u1 <- runif(1)
+    u2 <- runif(1)
+    Y <- u1^(1/alpha)/2
+    if (u2 <= (2*(1-Y))^(alpha - 1)) {
+      u3 <- runif(1)
+      if (u3 > 1/2) {
+        Y = 1 - Y
+      }
+      return(Y)
+    }
+  }
+}
+data <- replicate(1000, sample(0.6))
+hist(data,freq=FALSE)
+p <- seq(0,1,length=100)
+lines(p, dbeta(p,0.6,0.6))
+```
+The expected number of iterations of the rejection algorithm that are needed
+until acceptance is $c$.
+
+## Q4h)
+It is not possible because there the pdf of the beta distribution is asymptotic
+at 0 and 1.
+
+\newpage
+
+## Q5)
+The joint pdf is given by:
+$$
+f(x,y) = \begin{cases}
+4 &\ 0\leq 2x\leq y \\
+0 &\ \text{otherwise}
+\end{cases}
+$$
+Next, we want to find the marginal PDF of $X$, with support $(0, 0.5)$:  
+$f_X(x)=\int^{\text{all }y}f(x,y)dy=\int^{2x}_04dy=8x$
+
+Marginal CDF of $X$ is then given by:
+$F_X(x)=\int_0^xf_x(t)dt=\int_0^x8tdt=4x^2$
+
+Finding the quantile function gives us:
+$F_X^\leftarrow(x)=\frac{\sqrt{y}}{2}$
+
+The conditional PDF $Y|X=x$ is:
+$$
+f_{Y|X=x}=\frac{f_{X,Y}(x,y)}{f_X(x)}=\begin{cases}
+\frac{1}{2x} &\ 0\leq2x\leq y \\
+0 &\ \text{otherwise}
+\end{cases}
+$$
+And so an appropriate sampling algorithm is as such:  
+1. Sample $U,V \stackrel{ind.}{\sim} U(0,1)$  
+2. Set $X=\frac{\sqrt{U}}{2}$ and $Y=2Vx$  
+3. Return $(X,Y)$

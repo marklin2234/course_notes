@@ -1,0 +1,20 @@
+---
+title: "STAT 441 A4"
+author: "Mark Lin"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+# 9.5c)
+
+```{r}
+x <- c(0, 1, 2, 3)
+y <- c(1, 2, 2, 1)
+
+fit <- lm(y ~ x)
+
+summary(fit)
+```
+Thus, our linear regression is $y=1.5$.
+
+

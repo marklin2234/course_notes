@@ -1,0 +1,32 @@
+SAheart                 South African Heart Disease Data
+SCmolecule              A protein/DNA complex molecule from
+                        Saccharomyces Cerevisiae
+alaska_forest           Cooperative Alaska Forest Inventory data
+binaryalphadigits       Binary Alphadigits
+blocks                  A set of 100 plastic "blocks"
+bone                    Relative Spinal Bone Mineral Density Data
+bone_ext                Spinal Bone Mineral Density (Extended) Data
+covidNZ                 Covid 19 Case Data New Zealand
+crabSpecies             Colour and Sex of Rock Crabs
+diabetes                Diabetes Data from Andrews and Herzberg
+digits                  USPS Handwritten Digits
+elements                The first 118 chemical elements
+faces                   Olivetti Faces
+frey                    Frey Faces
+igg1                    Human immunoglobulin G1 antibody molecule
+judgment                Judgment samples of plastic blocks
+lepto                   Rock Crabs (Leptograpsus variegatus) data
+lightspeeds             Historical Determinations of the Speed of Light
+lizards                 A fictional data set on lizards perch choices
+medicalRecords          Mining medical records (fictional)
+michelson_1879          A.A. Michelson's 1879 Determinations of the
+                        Speed of Light
+minority                Canadian Visible Minority Data 2006
+ordalphadigits          Binary Alphadigits Isomap
+ordfrey                 Frey Faces Isomap
+pandemic                Fictional pandemic data
+pkg_data                Simple summary of data available in named
+                        packages
+placenamesCanada        Canadian place names and their geo-locations.
+trtPan                  Fictional pandemic data (with treatment
+                        variable)

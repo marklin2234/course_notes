@@ -1,0 +1,10 @@
+high_score
+case_sensitivity
+not_equal
+lose
+start_nif
+end_nif
+invalid_word
+invalid_arg
+same
+longwords

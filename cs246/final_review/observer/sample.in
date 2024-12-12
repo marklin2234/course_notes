@@ -1,0 +1,10 @@
+s Fangda 0.5
+s David 0.85
+s Caroline 1
+a A1 0.05
+a A2 0.06
+study Fangda
+study Fangda
+a A3 0.06
+drop Caroline
+a Midterm 0.2

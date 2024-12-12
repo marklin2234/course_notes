@@ -1,0 +1,44 @@
+1.
+void f(int& treasure) {
+    treasure *= 2;
+    g();
+}
+
+2.
+void f(int& counter) {
+    ++counter;
+}
+
+3.
+void f(std::vector<int>& data) {
+    std::vector<int> tempData = data;
+    g(tempData);  // provide basic guarantee
+    data.swap(tempData);
+}
+
+4. 
+class A{...}, class B{...};
+class C {
+    A a;
+    B b;
+public:
+    void f() {
+	a.g();  // provide strong guarantee
+	b.h();  // provide strong guarantee
+    }
+};
+
+5.
+std::string f(std::vector<std::string>& v) {
+    std::string* s = new std::string{""};
+    try {
+        g(s);  // provide basic guarantee
+		v.push_back(s);
+		return s;
+    } catch (...) {
+		delete s;
+        throw;
+    }
+}
+        
+

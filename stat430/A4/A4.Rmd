@@ -1,0 +1,229 @@
+---
+title: "STAT430 A4"
+author: "Mark Lin"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+# Q1a)
+
+```{r}
+data <- read.table("Q1.txt")
+A <- as.numeric(data[,2] == "+") - as.numeric(data[,2] == "-")
+B <- as.numeric(data[,3] == "+") - as.numeric(data[,3] == "-")
+C <- as.numeric(data[,4] == "+") - as.numeric(data[,4] == "-")
+D <- as.numeric(data[,5] == "+") - as.numeric(data[,5] == "-")
+
+mean.crack <- as.numeric(apply(data[,6:7],1,mean))
+data.location <- data.frame(A,B,C,D,mean=mean.crack)
+
+crack.fit <- lm(mean ~ A + B + C + D + A:B + A:C + A:D + B:C + B:D + C:D+A:B:C + A:B:D + A:C:D + B:C:D + A:B:C:D ,data=data.location)
+crack.fit
+
+factorial.effects <- crack.fit$coefficients[-1] * 2
+
+N <- length(factorial.effects)
+half.normal.quantiles <- qnorm(0.5 + 0.5 * (1:N - 0.05) / N)
+
+abs.effects <- sort(abs(factorial.effects))
+
+plot(half.normal.quantiles, abs.effects)
+
+variance <- (data[,6] - mean.crack)^2+(data[,7]-mean.crack)^2
+tau.hat <- sqrt((4/(2*(2^4)^2) * sum(variance)))
+t.obs <- factorial.effects / tau.hat
+sig.effects <- t.obs[abs(t.obs) > 3.38]
+sig.effects
+```
+
+From the plot, it is clear that the interactions A,B,C,D,BD,CD and BCD
+are significant because they are not on the linear line.
+
+We can confirm this using a formal t-test which gives us the same result.
+
+# Q1b)
+
+```{r}
+var.crack <- apply(data[,6:7],1,var)
+log.var.crack <- log(var.crack)
+data.dispersion <- data.frame(A,B,C,D,log.var.crack)
+
+log.var.crack.fit <- lm(log.var.crack ~ A + B + C + D + A:B + A:C + A:D + B:C + B:D + C:D + A:B:C + A:B:D + A:C:D + B:C:D + A:B:C:D,data=data.dispersion)
+log.var.crack.fit
+
+factorial.effects <- log.var.crack.fit$coefficient[-1] * 2
+
+N <- length(factorial.effects)
+half.normal.quantiles <- qnorm(0.5 + 0.5 * (1:N - 0.05) / N)
+abs.effects <- sort(abs(factorial.effects))
+
+plot(half.normal.quantiles, abs.effects)
+
+tau <- sqrt(8/((2-1))*16)
+tau.log.var <- factorial.effects / tau
+
+critical.eer <- qnorm(0.5 + 0.5 * (1 - 0.05)^(1 / (2^4 -1)))
+
+sig.effects <- tau.log.var[abs(tau.log.var) > critical.eer]
+sig.effects
+```
+
+From the half normal plot, we can say that the effects of CD are probably
+significant. However, from the formal test, we conclude no effects
+are significant.
+
+# Q1c)
+
+$$
+\hat H = 11.031 + 0.901x_A+1.829x_C+1.388x_D-1.843x_Bx_D+0.89x_Cx_D+1.443x_Bx_Cx_D
+$$
+to minimize the mean, we take $x_A=-,x_B=+,x_C=-,x_D=+$
+
+\newpage
+
+# Q2 a)
+
+```{r}
+source("qsmmd.R")
+data <- read.table("Q2.txt")
+
+A <- as.numeric(data[,2] == "+") - as.numeric(data[,2] == "-")
+B <- as.numeric(data[,3] == "+") - as.numeric(data[,3] == "-")
+C <- as.numeric(data[,4] == "+") - as.numeric(data[,4] == "-")
+D <- as.numeric(data[,5] == "+") - as.numeric(data[,5] == "-")
+E <- as.numeric(data[,6] == "+") - as.numeric(data[,6] == "-")
+
+tensile.strength <- as.numeric(apply(data[,7:9],1,mean))
+
+tensile.strength.fit <- lm(tensile.strength ~ A + B + C + D + E + A:B + A:C + A:D + B:C + B:D +C:D + D:E +C:E + B:E + A:E)
+tensile.strength.fit
+
+factorial.effects <- tensile.strength.fit$coefficient[-1] * 2
+
+var <- as.numeric(apply(data[,7:9],1,var))
+tau.hat <- sqrt(4/(3*16^2)*sum(var))
+
+tau.tensile.strength <- factorial.effects / tau.hat
+
+critical.value <- qsmmd(15,32,0.95)
+tau.tensile.strength[abs(tau.tensile.strength) > critical.value]
+
+log.var <- log(var)
+log.var.fit <- lm(log.var ~ A + B + C + D + E + A:B + A:C + A:D + B:C + B:D + C:D + D:E + C:E + B:E + A:E)
+log.var.fit
+
+factorial.effects <- log.var.fit$coefficients[-1] * 2
+tau <- sqrt(8/((3 - 1) * 16))
+tau.log.var <- factorial.effects / tau
+
+critical.value <- qnorm(0.5 + 0.5 * (1-0.05)^(1/15))
+tau.log.var[abs(tau.log.var) > critical.value]
+```
+
+Thus, for the location model, A, A:C and B:D are the significant 
+effects at 5%, and for the dispersion model, the significant effects
+are A, B, C and A:B at the 5% level.
+
+The fitted location model:
+$$
+\hat H = 1605 + 263.5x_A+82.5x_Ax_C-52.71x_Bx_D
+$$
+
+The fitted dispersion model:
+$$
+\log\hat\sigma^2=7.244 -1.253x_A-0.841x_B-0.816x_C+0.841x_Ax_B
+$$
+
+# Q2b)
+
+No, the fitted location model does not satisfy the effect hereditary
+principle because we include A:C and B:D, but not B, C, or D.
+
+```{r}
+tensile.strength.fit$coefficient[-1] * 2
+```
+Since factor $B$ has a larger effect, we will choose it.
+
+$$
+\hat H = 1605 + 263.5x_A+36.67x_B +82.5x_Ax_C-52.71x_Bx_D
+$$
+
+# Q2 c)
+
+We want to maximize $\hat H$. This is done by taking $A=+,B=+,C=+,D=-$.
+No, factor in the dispersion model can be changed.
+
+Thus, the optimal is $A=+,B=+,C=+,D=-,E=-$ using the $12^{th}$ run.
+
+# Q2 d)
+
+We want to minimize $\hat\log\sigma^2$. This is done by taking
+$A=+,B=+,C=+$
+
+To maximize the mean, we use $D=-$ which also gives us $E=-$ from the
+$12^{th}$ run.
+
+\newpage
+
+# Q3 a)
+
+$$
+E[\hat\theta_1]=0.5[E(\bar y_3)+E(\bar y_4)] - 0.5[E(\bar y_1)+E(\bar y_2)]
+$$
+From the normal distribution, we get:
+
+$$
+\begin{aligned}
+E(\bar y_1)&=\alpha_0+\alpha_1(-1)+\alpha_2(-1)+\alpha_3(-1) \\
+E(\bar y_2)&=\alpha_0+\alpha_1(-1)+\alpha_2(+1)+\alpha_3(+1) \\
+E(\bar y_3)&=\alpha_0+\alpha_1(+1)+\alpha_2(-1)+\alpha_3(-1) \\
+E(\bar y_4)&=\alpha_0+\alpha_1(+1)+\alpha_2(+1)+\alpha_3(+1) \\
+E[\hat\theta_1]&= \alpha_1+\alpha_1 = 2\alpha_1=\theta_1
+\end{aligned}
+$$
+Thus, $\hat\theta_l$ is an unbiased estimator, $\forall l$, using this
+result WLOG.
+
+$$
+\begin{aligned}
+Var(\hat\theta_1) &= Var(0.5(\bar y_3+\bar y_4)-0.5(\bar y_1+\bar y_2)) \\
+&= 0.5^2[Var(\bar y_3) + Var(\bar y_4) + Var(\bar y_1) + Var(\bar y_2)] \\
+&= 0.25(\theta_2+\theta_2+\theta^2/2 + \theta^2/2) = 0.75\theta^2
+\end{aligned}
+$$
+# Q3 b)
+
+Since,
+
+$$
+\begin{aligned}
+E[s_1^2]&=E[s_2^2]=\theta^2 \\
+s_1^2(n_1-1)&=\sum_{j=1}^{n_1}(y_{1j}-\bar y_1)^2 \\
+s_2^2(n_2-1)&=\sum_{j=1}^{n_2}(y_{2j}-\bar y_2)^2 \\
+SS &= (n_1-1)s_1^2+(n_2-1)s_2^2
+\end{aligned}
+$$
+and $df=n_1+n_2-2$. The unbiased estimator for $\sigma^2$:
+
+$$
+\hat\sigma^2=\frac{(n_1-1)s_1^2+(n_2-1)s_2^2}{n_1+n_2-2} \\
+\hat\sigma^2=\frac{s_1^2+s_2^2}{2}
+$$
+
+# Q3c.1)
+
+$$
+z_1=\frac{\hat\theta_l}{SE(\hat\theta_l)} \\
+=\frac{\hat\theta_l}{\sqrt{0.75\hat\theta_l^2}}
+$$
+
+# Q3c.2)
+
+$$
+c=t_{df,1-\frac{\alpha}{2}}
+$$
+
+where $df=n_1+n_2+2$. our $c$ is the critical value which corresponds
+to the $97.5\%$ percentile of our t-distribution with $df$ degrees of
+freedom. By choosing a $c$ s.t. $IER=\alpha$ we ensure the probability
+of incorrectly rejecting $H_0$ for a test is $\alpha$.

@@ -1,0 +1,3 @@
+[submodule "cs246/project/src"]
+	path = cs246/project/src
+	url = https://github.com/marklin2234/cs246_proj.git

@@ -1,0 +1,10 @@
+addtext 0 9 0 9
+addgraphics 0 9 0 9
+addtext 10 19 10 19
+addgraphics 10 19 10 19
+filledbox 0 5 3 5 A
+movingbox 3 8 0 5 B r
+filledbox 11 15 13 15 !
+movingbox 13 18 11 15 a r
+render
+animate 5

@@ -1,0 +1,100 @@
+high_score
+
+1. WIN -> best score
+2. WIN -> not best score
+3. WIN -> best score
+4. this also tests output for
+starting word: 
+This word could have been played earlier
+best score (updated)
+no update
+best score(updated)
+
+args:
+cold warm /usr/share/dict/words
+
+in:
+cord
+cold
+cord
+card
+ward
+warm
+
+cord
+cold
+cord
+cold
+cord
+card
+ward
+warm
+
+cord
+cold
+card
+ward
+warm
+
+
+case_sensitivity
+
+args:
+Cold warm /usr/share/dict/words
+
+in:
+cold
+cord
+card
+ward
+warm
+
+not_equal
+
+args:
+hello spaghetti /usr/share/dict/words
+
+in:
+
+lose
+
+args:
+cold warm /usr/share/dict/words
+
+in:
+cord
+cold
+cord
+cold
+cord
+cold
+cord
+cold
+cord
+
+start_nif
+
+args:
+dsfmsp warm words
+
+in:
+
+end_nif
+
+args:
+cold dsfmsp words
+
+in:
+
+invalid_word
+
+args:
+cold warm words
+
+in:
+cmld
+cord
+card
+ward
+warm
+

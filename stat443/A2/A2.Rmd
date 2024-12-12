@@ -1,0 +1,391 @@
+---
+title: "STAT 443 A2"
+author: "Mark Lin"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r, setup=TRUE}
+set.seed(123)
+```
+
+```{r}
+data <- read.csv("StoreSales.csv")
+Test.indx <- sort(c(68, 167, 129, 162, 43, 14, 187, 51, 85, 21, 106,
+    182, 74, 7, 73, 79, 37, 105, 110, 165))
+```
+
+## 1a)
+
+```{r}
+time <- 1:nrow(data)
+plot(time, data[,1], main="Store Sales vs Time")
+for (i in time) {
+  colors <- ifelse(time %in% Test.indx, "blue", "red")
+  points(time, data[,1], col=colors, pch=1)
+}
+legend(x="bottomright", legend=c("Test Data", "Training Data"), col=c("blue", "red"), pch=1)
+acf(data)
+par(mfrow=c(2,2))
+plot(lm(data[,1] ~ time))
+```
+Analyzing just the scatterplot, the data is most likely not stationary, as
+there is a quadratic trend in the data. We can confirm this using the sample
+ACF plot, where we can see a slow decay, implying a non-constant mean. Thus, the data is not stationary.
+
+\newpage
+
+## 1b)
+
+```{r}
+library(glmnet)
+
+degrees <- 2:15
+Log.Lambda.Seq = c(c(-15, -10, -5, -2, -1, -0.5), seq(0, 10,
+    by = 0.1))
+Lambda.Seq = exp(Log.Lambda.Seq)
+alphas <- c(0, 0.5, 1)
+training_data <- data[-Test.indx,]
+training_time <- time[-Test.indx]
+test_data <- data[Test.indx,]
+test_time <- time[Test.indx]
+
+optimal_fit <- list()
+
+for (a in alphas) {
+  apse_values <- c()
+  for (i in seq_along(degrees)) {
+    p <- degrees[i]
+    X <- poly(training_time, p)
+    CV <- cv.glmnet(as.matrix(X), training_data,
+                  alpha=a,standardize=TRUE,intercept=TRUE,
+                  lambda=Lambda.Seq)
+    lambda <- CV$lambda.min
+    X_test <- poly(test_time, p)
+    predictions <- predict(CV, newx=as.matrix(X_test), s="lambda.min")
+    squared_errors <- (predictions - test_data)^2
+    APSE <- mean(squared_errors)
+    apse_values <- c(apse_values, APSE)
+  }
+  
+  par(mfrow=c(1,2))
+  plot(degrees, apse_values, main=paste("APSE vs Degree, Alpha = ", a))
+  
+  deg <- degrees[which.min(apse_values)]
+  plot(training_time, training_data,
+       main="Fitted Elastic Net Regression Model on Training Data")
+  
+  X <- poly(training_time, deg)
+  CV <- cv.glmnet(as.matrix(X), training_data, 
+                  alpha=a,standardize=TRUE,intercept=TRUE,
+                  lambda=Lambda.Seq)
+  fitted_values <- predict(CV, newx=as.matrix(X),s="lambda.min")
+  lines(fitted_values, col="red", lwd=2)
+  optimal_fit[[length(optimal_fit) + 1]] <- list(model = CV, degree = deg)
+}
+```
+
+\newpage
+
+## 1c)
+
+```{r}
+apse_values <- c()
+for (i in seq_along(optimal_fit)) {
+  fit <- optimal_fit[[i]]$model
+  deg <- optimal_fit[[i]]$degree
+  predictions <- predict(fit, newx=as.matrix(poly(test_time, deg)), s="lambda.min")
+  squared_error <- (predictions - test_data)^2
+  APSE <- mean(squared_error)
+  apse_values <- c(apse_values, APSE)
+  
+  print(paste0("Alpha = ", alphas[i], ", Degree = ", deg, ", APSE = ", APSE))
+}
+
+opt_idx <- which.min(apse_values)
+print(paste0("The best model is Alpha = ", alphas[opt_idx], ", Degree = ", deg))
+```
+
+\newpage
+
+## 1d)
+
+```{r}
+opt_fit <- optimal_fit[[opt_idx]]$model
+opt_degree <- optimal_fit[[opt_idx]]$degree
+
+plot(time, data[,1], col="blue", main="Fitted vs Actual",
+     ylab="Store Sales", xlab="Time")
+fitted_values <- predict(opt_fit, 
+                    newx=as.matrix(poly(time,opt_degree)),
+                    s="lambda.min")
+
+lines(fitted_values, col="red")
+legend(x="bottomright", legend=c("Actual", "Fitted"), col=c("blue", "red"), pch=c(1,NA),lwd=c(NA,1))
+
+par(mfrow=c(1,2))
+residuals <- data[,1] - fitted_values
+plot(time, residuals, main="Residuals vs Time")
+acf(residuals)
+```
+
+Taking a look at the residual acf plot, we can see that the residuals
+are very correlated. Furthermore, the time series residuals plot
+indicates that there is still seasonality/trend in our residuals. This
+means our model is not very high quality. The residual acf plot has
+fast decay indicating that they may be stationary though.
+
+\newpage
+
+## 2a)
+
+```{r}
+apse_values <- c()
+for (i in seq_along(degrees)) {
+  p <- degrees[i]
+  fit <- lm(training_data ~ poly(training_time, p))
+  
+  predictions <- predict(fit, newx=poly(test_time, p))
+  squared_error <- (predictions - test_data)^2
+  APSE <- mean(squared_error)
+  
+  apse_values <- c(apse_values, APSE)
+}
+plot(degrees, apse_values)
+
+best_ols_idx <- which.min(apse_values)
+best_ols_degree <- degrees[best_ols_idx]
+print(paste0("The best model has degree ", best_ols_degree))
+```
+
+\newpage
+
+## 2b)
+
+```{r}
+ols_fit <- lm(data[,1] ~ poly(time, best_ols_degree))
+plot(time, data[,1], col="blue", main="Fitted vs Actual",
+     ylab="Store Sales", xlab="Time")
+fitted_values <- predict(ols_fit, newx=poly(time, best_ols_degree))
+lines(fitted_values, col="red")
+legend(x="bottomright", legend=c("Actual", "Fitted"), col=c("blue", "red"), pch=c(1,NA),lwd=c(NA,1))
+
+par(mfrow=c(1,2))
+residuals <- data[,1] - fitted_values
+plot(time, residuals, main="Residuals vs Time")
+acf(residuals)
+```
+
+We can make a similar conclusion to the elastic net regression model in
+question 1d.
+
+\newpage
+
+## 2c)
+
+### i)
+
+```{r}
+library(L1pack)
+apae_values <- c()
+for (i in seq_along(degrees)) {
+  p <- degrees[i]
+  fit <- lad(training_data ~ poly(training_time, p))
+  
+  predictions <- predict(fit, newx=poly(test_time, p))
+  absolute_error <- abs(predictions - test_data)
+  APAE <- mean(absolute_error)
+  
+  apae_values <- c(apae_values, APAE)
+}
+plot(degrees, apae_values)
+
+best_lad_idx <- which.min(apae_values)
+best_lad_degree <- degrees[best_lad_idx]
+print(paste0("The best model has degree ", best_lad_degree))
+```
+
+### ii)
+
+```{r}
+lad_fit <- lad(data[,1] ~ poly(time, best_lad_degree))
+plot(time, data[,1], col="blue", main="Fitted vs Actual",
+     ylab="Store Sales", xlab="Time")
+fitted_values <- predict(lad_fit, newx=poly(time, best_lad_degree))
+lines(fitted_values, col="red")
+legend(x="bottomright", legend=c("Actual", "Fitted"), col=c("blue", "red"), pch=c(1,NA),lwd=c(NA,1))
+
+par(mfrow=c(1,2))
+residuals <- data[,1] - fitted_values
+plot(time, residuals, main="Residuals vs Time")
+acf(residuals)
+```
+
+We can come to the same conclusion as question 1d and 2b.
+
+\newpage
+
+## 3)
+
+```{r}
+lambda <- 10^(-4)
+
+robust_ridge_loss <- function(beta, X, y) {
+  residuals <- y - X %*% beta
+  lad_loss <- mean(abs(residuals))
+  penalty <- lambda * sum(beta[-1]^2)
+  return (lad_loss + penalty)
+}
+
+apse_values <- c()
+
+for (p in degrees) {
+  X_train <- as.matrix(poly(training_time, p))
+  X_test <- as.matrix(poly(test_time, p))
+  
+  initial_beta <- rep(1, ncol(X_train) + 1)
+  
+  fit <- optim(par = initial_beta,
+               fn=robust_ridge_loss,
+               X=cbind(1, X_train),
+               y=training_data)
+  
+  beta <- fit$par
+  predictions <- cbind(1, X_test) %*% beta
+  squared_error <- (predictions - test_data)^2
+  APSE <- mean(squared_error)
+  apse_values <- c(apse_values, APSE)
+}
+
+plot(degrees, apse_values)
+optimal_degree <- degrees[which.min(apse_values)]
+print(paste0("The optimal degree is ", optimal_degree))
+```
+
+\newpage
+
+## 4a)
+
+```{r}
+plot(time, data[,1], main="Store Sales vs Time")
+for (i in time) {
+  colors <- ifelse(time %in% Test.indx, "blue", "red")
+  points(time, data[,1], col=colors, pch=1)
+}
+legend(x="bottomright",
+       legend=c("Test Data", "Training Data", "Elastic Net",
+                "Least Squares", "Least Absolute Error", "Robust Ridge"),
+       col=c("blue", "red","darkgreen", "darkorange","purple","brown"),
+       pch=c(1, 1, NA, NA, NA, NA),
+       lwd=c(NA,NA,1,1,1,1))
+
+fitted_values <- list()
+colors <- c("darkgreen","darkorange","purple","brown")
+
+
+fitted_values[[1]] <- predict(opt_fit, 
+                    newx=as.matrix(poly(time,opt_degree)),
+                    s="lambda.min")
+fitted_values[[2]] <- predict(ols_fit, newx=poly(time, best_ols_degree))
+fitted_values[[3]] <- predict(lad_fit, newx=poly(time, best_lad_degree))
+
+X <- as.matrix(poly(time, optimal_degree))
+initial_beta <- rep(1, ncol(X) + 1)
+
+fit <- optim(par = initial_beta,
+               fn=robust_ridge_loss,
+               X=cbind(1, X),
+               y=data[,1])
+beta <- fit$par
+
+fitted_values[[4]] <- cbind(1, X) %*% beta
+
+for (i in seq_along(fitted_values)) {
+  predictions <- fitted_values[[i]]
+  lines(predictions, col=colors[i])
+}
+```
+
+\newpage
+
+## 4b)
+
+```{r}
+apse_values <- rep(0,4)
+
+for (i in seq_along(fitted_values)) {
+  predictions <- fitted_values[[i]]
+  squared_error <- (predictions - data[,1])^2
+  apse_values[i] <- mean(squared_error)
+}
+
+model_apse <- data.frame(Model=c("Elastic Net", "Least Squares", "Least Absolute Error", "Robust Ridge"), APSE=apse_values)
+
+model_apse
+
+best_idx <- which.min(model_apse$APSE)
+print(paste0("The best model is ", model_apse$Model[best_idx], " as measured by APSE."))
+```
+
+\newpage
+
+## 4c)
+
+Yes, using a different training/test split would change my conclusion in
+part b. If the test data is not distributed properly, it may not capture
+some characteristics of the data. If the test set captured more of the
+outliers then APSE values would differ greatly. For example, elastic
+net with $\alpha=0$ and $\alpha=1$ would be greatly impacted
+due to their penalty factors. Changing the size of the splits may also
+impact the conclusion in part b. Smaller test sets would increase the
+quality of our predictor function, but increase variance, and vice versa.
+
+A hypothetical training/test split could
+be one that is generated using `runif(40, 1, 200)`. This uses the 
+general recommendation of $80\%\;\mathcal S$ and $20\%\;\mathcal T_0$
+
+\newpage
+
+## 5a)
+
+First, check $E[X_t]=\mu$:
+$$
+\begin{aligned}
+E[X_t]&=E[Z_t+0.5Z_{t-1}-2Z_{t-2}] \\
+E[X_t]&=E[Z_t]+0.5E[Z_{t-1}]-2E[Z_{t-2}] \\
+E[X_t]&=0
+\end{aligned}
+$$
+Second, check $E[X_t^2]<\infty$, note that 
+$Var[Z_t]=E[Z_t^2]-E[Z_t]\implies E[Z_t^2]=Var[Z_t]=\sigma^2$.
+
+$$
+\begin{aligned}
+E[X_t^2]&=E[(Z_t+0.5Z_{t-1}-2Z_{t-2})^2] \\
+&= E[Z_t^2+Z_tZ_{t-1}-4Z_tZ_{t-2}+0.25Z_{t-1}^2-2Z_{t-1}Z_{t-2}+4Z_{t-2}^2] \\
+&= E[Z_t^2] +E[Z_tZ_{t-1}]-4E[Z_tZ_{t-2}]+0.25E[Z_{t-1}^2]-2E[Z_{t-1}Z_{t-2}]+4E[Z_{t-2}^2] \\
+&= E[Z_t^2]+0.25E[Z_{t-1}^2]+4E[Z_{t-2}^2] \\
+&= 5.25\sigma^2 < \infty
+\end{aligned}
+$$
+Finally, check $\gamma(h)=\gamma(0)$
+
+$$
+\begin{aligned}
+\gamma_{X_t}(h)&=Cov(X_t, X_{t+h}) \\
+&= Cov(Z_t+0.5Z_{t-1}-2Z_{t-2}, Z_{t+h}+0.5Z_{t+h-1}-2Z_{t+h-2}) \\
+&= Cov(Z_t,Z_{t+h})+0.25Cov(Z_t+Z_{t+h-1})+\ldots \\
+&= 0
+\end{aligned}
+$$
+Note that all covariances are $0$ since $Z_t\sim WN(0,\sigma^2)$. Thus,
+it is independent of $t$.
+
+\newpage
+
+## 5b)
+
+Note $f_{Z_t}(z)$ is not a function of $t$. Thus, we can treat it
+as a constant $c < \infty$. Moreover, they are independent, thus
+$Cov(Z_t, Z_{t+h})=0$ holds. Using the calculations in (a), it is
+trivial that it remains stationary.

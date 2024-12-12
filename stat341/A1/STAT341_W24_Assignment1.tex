@@ -1,0 +1,907 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\PassOptionsToPackage{dvipsnames,svgnames,x11names}{xcolor}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{longtable,booktabs,array}
+\usepackage{calc} % for calculating minipage widths
+% Correct order of tables after \paragraph or \subparagraph
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+\makeatother
+% Allow footnotes in longtable head/foot
+\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
+\makesavenoteenv{longtable}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={STAT 341: Assignment 1},
+  colorlinks=true,
+  linkcolor={Maroon},
+  filecolor={Maroon},
+  citecolor={Blue},
+  urlcolor={blue},
+  pdfcreator={LaTeX via pandoc}}
+
+\title{STAT 341: Assignment 1}
+\usepackage{etoolbox}
+\makeatletter
+\providecommand{\subtitle}[1]{% add subtitle to \maketitle
+  \apptocmd{\@title}{\par {\large #1 \par}}{}{}
+}
+\makeatother
+\subtitle{DUE: Friday, January 26, 2024 by 5:00pm EST}
+\author{}
+\date{\vspace{-2.5em}}
+
+\begin{document}
+\maketitle
+
+\(\;\) \(\;\) \(\;\) \(\;\)
+
+\hypertarget{notes}{%
+\subsection{NOTES}\label{notes}}
+
+Your assignment must be submitted by the due date listed at the top of
+this document, and it must be submitted electronically in .pdf format
+via Crowdmark. This means that your responses for different questions
+should begin on separate pages of your .pdf file. Note that your .pdf
+solution file must have been generated by R Markdown. Additionally:
+
+\begin{itemize}
+\item
+  For mathematical questions: your solutions must be produced by LaTeX
+  (from within R Markdown). Neither screenshots nor scanned/photographed
+  handwritten solutions will be accepted -- these will receive zero
+  points.
+\item
+  For computational questions: R code should always be included in your
+  solution (via code chunks in R Markdown). If code is required and you
+  provide none, you will receive zero points.
+\item
+  For interpretation questions: plain text (within R Markdown) is
+  required. Text responses embedded as comments within code chunks will
+  not be accepted.
+\end{itemize}
+
+Organization and comprehensibility is part of a full solution.
+Consequently, points will be deducted for solutions that are not
+organized and incomprehensible. Furthermore, if you submit your
+assignment to Crowdmark, but you do so incorrectly in any way (e.g., you
+upload your Question 2 solution in the Question 1 box), you will receive
+a 5\% deduction (i.e., 5\% of the assignment's point total will be
+deducted from your point total).
+
+\newpage
+
+\hypertarget{question-1-basic-r-calculations-8-points}{%
+\subsection{QUESTION 1: Basic R Calculations {[}8
+points{]}}\label{question-1-basic-r-calculations-8-points}}
+
+The first lecture introduced \texttt{apply} functions as an alternative
+to using \texttt{for} loops in R. Implement the following tasks in R by
+using an appropriate \texttt{apply} function instead of a \texttt{for}
+loop. You may use \emph{any} functions in \texttt{base} R to complete
+these tasks.
+
+\begin{enumerate}
+\def\labelenumi{(\alph{enumi})}
+\tightlist
+\item
+  {[}2 points{]} Add 10 to each of the odd numbers in the following
+  vector.
+\end{enumerate}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{part\_a }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\DecValTok{4}\NormalTok{, }\DecValTok{9}\NormalTok{, }\DecValTok{22}\NormalTok{, }\DecValTok{25}\NormalTok{, }\DecValTok{30}\NormalTok{, }\DecValTok{34}\NormalTok{, }\DecValTok{41}\NormalTok{, }\DecValTok{53}\NormalTok{, }\DecValTok{67}\NormalTok{, }\DecValTok{98}\NormalTok{)}
+
+\NormalTok{add\_ten\_to\_odd }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(num) \{}
+  \ControlFlowTok{if}\NormalTok{ (num }\SpecialCharTok{\%\%} \DecValTok{2} \SpecialCharTok{==} \DecValTok{1}\NormalTok{) \{}
+    \FunctionTok{return}\NormalTok{(num }\SpecialCharTok{+} \DecValTok{10}\NormalTok{)}
+\NormalTok{  \} }\ControlFlowTok{else}\NormalTok{ \{}
+    \FunctionTok{return}\NormalTok{(num);}
+\NormalTok{  \}}
+\NormalTok{\}}
+
+\NormalTok{ret }\OtherTok{\textless{}{-}} \FunctionTok{apply}\NormalTok{(}\FunctionTok{matrix}\NormalTok{(part\_a), }\AttributeTok{MARGIN=}\DecValTok{1}\NormalTok{, }\AttributeTok{FUN=}\NormalTok{add\_ten\_to\_odd)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{enumerate}
+\def\labelenumi{(\alph{enumi})}
+\setcounter{enumi}{1}
+\tightlist
+\item
+  {[}2 points{]} Determine how many entries in each row of the following
+  matrix begin with the lowercase letter j.
+\end{enumerate}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{part\_b }\OtherTok{\textless{}{-}} \FunctionTok{matrix}\NormalTok{(}\FunctionTok{c}\NormalTok{(letters, }\FunctionTok{tolower}\NormalTok{(month.name[}\DecValTok{1}\SpecialCharTok{:}\DecValTok{10}\NormalTok{])), }\AttributeTok{nrow =} \DecValTok{6}\NormalTok{)}
+
+\NormalTok{find\_num\_start\_j }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(row) \{}
+  \FunctionTok{sum}\NormalTok{(}\FunctionTok{substr}\NormalTok{(row, }\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{) }\SpecialCharTok{==} \StringTok{"j"}\NormalTok{)}
+\NormalTok{\}}
+
+\NormalTok{ret }\OtherTok{\textless{}{-}} \FunctionTok{apply}\NormalTok{(part\_b, }\AttributeTok{MARGIN=}\DecValTok{1}\NormalTok{, }\AttributeTok{FUN=}\NormalTok{find\_num\_start\_j)}
+\end{Highlighting}
+\end{Shaded}
+
+Later in the course, you will use more sophisticated techniques to
+minimize functions \(g(x)\) or find solutions to the equation
+\(g(x) = 0\). For the next two parts, solve these types of questions by
+naively evaluating \(g(x)\) at various \(x\) values. Get the \texttt{x}
+values for each question using the \texttt{seq(...,\ by=dx)} function.
+Notes:
+
+\begin{itemize}
+\tightlist
+\item
+  Using an extremely small \texttt{dx} will use a lot of computational
+  resources, so press escape if a computation is taking too long and try
+  something more moderate.
+\item
+  You can check your work with calculus. Your answers should be within
+  0.001 of the correct answers.
+\end{itemize}
+
+\begin{enumerate}
+\def\labelenumi{(\alph{enumi})}
+\setcounter{enumi}{2}
+\tightlist
+\item
+  {[}2 points{]} Approximate the value of \(x\) that minimizes
+  \(g(x) = x^4 + x^3 + 2x^2 + 3x + 4\) on \(-2 \le x \le 2\). Return the
+  \((x, g(x))\) combination for this approximate solution.
+\end{enumerate}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{g }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(x) \{}
+  \FunctionTok{return}\NormalTok{ (x}\SpecialCharTok{\^{}}\DecValTok{4} \SpecialCharTok{+}\NormalTok{ x}\SpecialCharTok{\^{}}\DecValTok{3} \SpecialCharTok{+} \DecValTok{2}\SpecialCharTok{*}\NormalTok{x}\SpecialCharTok{\^{}}\DecValTok{2}\SpecialCharTok{+}\DecValTok{3}\SpecialCharTok{*}\NormalTok{x}\SpecialCharTok{+}\DecValTok{4}\NormalTok{)}
+\NormalTok{\}}
+\NormalTok{x }\OtherTok{\textless{}{-}} \FunctionTok{seq}\NormalTok{(}\AttributeTok{from=}\SpecialCharTok{{-}}\DecValTok{2}\NormalTok{,}\AttributeTok{to=}\DecValTok{2}\NormalTok{,}\AttributeTok{by=}\FloatTok{0.1}\NormalTok{)}
+\NormalTok{ret }\OtherTok{\textless{}{-}} \FunctionTok{sapply}\NormalTok{(x, g)}
+\NormalTok{ans }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\FunctionTok{min}\NormalTok{(ret), x[}\FunctionTok{which.min}\NormalTok{(ret)])}
+\FunctionTok{print}\NormalTok{(ans)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1]  2.7771 -0.7000
+\end{verbatim}
+
+The approximate minimum (x, g(x)) is (-0.7, 2.7771)
+
+\begin{enumerate}
+\def\labelenumi{(\alph{enumi})}
+\setcounter{enumi}{3}
+\tightlist
+\item
+  {[}2 points{]} Approximate the value of \(x\) that solves
+  \(g(x) = \dfrac{x^2 + x - 1}{x^2 + 2} = 0\) on \(0 \le x \le 4\).
+  Return the \((x, g(x))\) combination for this approximate solution.
+\end{enumerate}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{g }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(x) \{}
+  \FunctionTok{return}\NormalTok{((x}\SpecialCharTok{\^{}}\DecValTok{2}\SpecialCharTok{+}\NormalTok{x}\DecValTok{{-}1}\NormalTok{) }\SpecialCharTok{/}\NormalTok{ (x}\SpecialCharTok{\^{}}\DecValTok{2}\SpecialCharTok{+}\DecValTok{2}\NormalTok{))}
+\NormalTok{\}}
+
+\NormalTok{x }\OtherTok{\textless{}{-}} \FunctionTok{seq}\NormalTok{(}\AttributeTok{from=}\DecValTok{0}\NormalTok{,}\AttributeTok{to=}\DecValTok{4}\NormalTok{,}\AttributeTok{by=}\FloatTok{0.1}\NormalTok{)}
+
+\NormalTok{ret }\OtherTok{\textless{}{-}} \FunctionTok{sapply}\NormalTok{(x, g)}
+
+\NormalTok{ans }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\FunctionTok{min}\NormalTok{(}\FunctionTok{abs}\NormalTok{(ret)), x[}\FunctionTok{which.min}\NormalTok{(}\FunctionTok{abs}\NormalTok{(ret))])}
+
+\CommentTok{\# (0.618, 0)}
+\FunctionTok{print}\NormalTok{(ans)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 0.01694915 0.60000000
+\end{verbatim}
+
+The approximate solution is (0.6, 0.01694915)
+
+\newpage
+
+\hypertarget{question-2-attributes-with-kernel-density-estimators-11-points}{%
+\subsection{QUESTION 2: Attributes with Kernel Density Estimators {[}11
+points{]}}\label{question-2-attributes-with-kernel-density-estimators-11-points}}
+
+The beginning of this course emphasizes population attributes with a
+single variate: \(\mathcal{P} = \{y_1, y_2, \ldots, y_N\}\). We often
+analyze this data under the assumption that \(y_1, y_2, \ldots, y_N\)
+are generated independently and identically from some univariate
+distribution with density function \(f\).
+\href{https://en.wikipedia.org/wiki/Kernel_density_estimation}{Kernel
+density estimation} provides a flexible method to estimate this function
+\(f\). Let's suppose we want to estimate the value of \(f\) at a given
+point \(y_0\). The \emph{kernel density estimator} (KDE) is
+\[\hat{f}_h(y_0) = \dfrac{1}{N}\sum_{i = 1}^NK_h(y_0 - y_i),\] where the
+non-negative function \(K_h(\cdot)\) is called a \emph{kernel} function
+that depends on a smoothing parameter \(h > 0\) called the
+\emph{bandwidth}. Essentially, the kernel function estimates \(f\) by
+weighting contributions corresponding to each population unit such that
+units with variate values close to \(y_0\) have larger \(K_h(\cdot)\)
+values. We can therefore think of the KDE as a population attribute:
+\(\hat{f}_h(y_0) = a(\mathcal{P}; y_0)\), where \(a(\cdot)\) is a
+function of the population variates and the fixed point \(y_0\).
+
+We now consider the \emph{Gaussian} kernel. For the Gaussian kernel, the
+function \(K_h(\cdot)\) is the density function of a normal distribution
+with mean 0 and standard deviation corresponding to the bandwidth \(h\):
+\[K_h(v) = \dfrac{1}{\sqrt{2\pi}h}\text{exp}\left(-\dfrac{1}{2}\left(\dfrac{v}{h}\right)^2\right).\]
+
+The figure below illustrates how to compute the kernel density estimate
+using a Gaussian kernel for a population of size 3:
+\(\{y_1 = 3.5, y_2 = 5.5, y_3 = 6\}\). The black curve visualizes the
+kernel density estimate for \(0 \le y_0 \le 10\). Each variate value is
+depicted by a coloured point on the horizontal axis, and its
+corresponding Gaussian kernel function with \(h = 1\) is given by the
+dotted curve of the same colour. As shown in the figure,
+\(\hat{f}_1(4)\) is computed by taking the average of the vertical
+coordinates for the three open circles.
+
+Below, you will investigate the location, scale, and replication
+properties of the KDE with a Gaussian kernel. To be clear, you will
+consider how the KDE at a \emph{fixed} point \(y_0\) is impacted when
+the population \(\mathcal{P}\) is modified.
+
+\begin{enumerate}
+\def\labelenumi{(\alph{enumi})}
+\tightlist
+\item
+  {[}2 points{]} Determine whether the kernel density estimator
+  \(\hat{f}_h(y_0)\) with a Gaussian kernel is location invariant,
+  location equivariant, or neither.
+\end{enumerate}
+
+It is evident that the KDF with a Gaussian kernel is neither. Modifying
+\(v\) causes an exponential change.
+
+\[
+a(\mathcal P) = a(y_1, \dots,y_n) = \hat f_h(y_0) = \frac{1}{N}\sum_{i=1}^NK_h(y_0 - y_i)
+\] \[
+a(\mathcal P + b) = a(y_1,\dots,y_n) = \hat f_h(y_0) = \frac{1}{N}\sum_{i=1}^NK_h(y_0 - (y_i + b))
+\] \[
+= \frac{1}{N}\sum_{i=1}^N\frac{1}{\sqrt{2\pi}h}exp\Bigg(-\frac{1}{2}\Big(\frac{y_0 - y_i - b}{h}\Big)^2\Bigg) \\
+= \frac{1}{N}\sum_{i=1}^N\frac{1}{\sqrt{2\pi}h}exp\Bigg(-\frac{1}{2}\Big(y\frac{y_0-y_i}{h}\Big)^2\Bigg)exp\Bigg(\frac{b}{2h}\Bigg)
+\] \[
+=\frac{1}{N}\sum_{i=1}^NK_h(y_0-y_i)exp\Big(\frac{b}{2h}\Big) = \frac{1}{N}exp\Big(\frac{b}{2h}\Big)\sum_{i=1}^NK_{h}(y_0-y_i) \neq a(\mathcal P + b)
+\] (b) {[}2 points{]} Determine whether the kernel density estimator
+\(\hat{f}_h(y_0)\) with a Gaussian kernel is scale invariant, scale
+equivariant, or neither.
+
+The KDF with a Gaussian kernel is neither because \(v\) is a factor in
+the exponent of the KDF. Thus, the function reacts accordingly by
+amplifying the exponent of the function, rather than scaling it by a
+constant. The proof follows from part a.
+
+\begin{enumerate}
+\def\labelenumi{(\alph{enumi})}
+\setcounter{enumi}{2}
+\tightlist
+\item
+  {[}2 points{]} Determine whether the kernel density estimator
+  \(\hat{f}_h(y_0)\) with a Gaussian kernel is replication invariant,
+  replication equivariant, or neither.
+\end{enumerate}
+
+The KDF with a Gaussian kernel should be replication invariant, but not
+replication equivariant. This is because \(\mathcal P^k\) does not
+change the average of the gaussian kernels.
+
+\[
+\mathcal P^k = \{x_1, \dots, x_{kn}\}
+\] \[
+\hat f_{h}(y_0) = \frac{1}{KN}\sum_{i=1}^{KN}K_n(y_0 - x_i)
+\] \[
+=\frac{1}{N} \sum_{i=1}^{N}K_n(y_0 - y_i)
+\]
+
+For the remainder of this question, we consider the \emph{uniform}
+kernel instead of the Gaussian one. The uniform kernel prompts the
+following \(K_h(\cdot)\) function:
+\[K_h(v) = \dfrac{1}{2h}, ~~ \text{with support}~~ \lvert v \rvert \le h.\]
+That is, \(K_h(v) = 0\) if \(\lvert v \rvert > h\). Given
+\(\{y_1 = 3.5, y_2 = 5.5, y_3 = 6\}\) from earlier and a bandwidth of
+\(h = 1\), the figure below demonstrates that the kernel density
+estimate with the uniform kernel is not smooth function of the fixed
+point \(y_0\). For instance, there is a spike at \(y_0 = 4.5\) since it
+is the only point such that \(\lvert y_0 - y_1 \rvert \le 1\) \emph{and}
+\(\lvert y_0 - y_2 \rvert \le 1\).
+
+We will investigate the location, scale, and replication properties of
+the KDE with a uniform kernel using a framework that is slightly
+different than the one introduced in class. In the course notes,
+location properties are defined with respect to all
+\(b \in \mathbb{R}\). When \(b = 0\), it is trivial that
+\(a(\mathcal{P}) = a(\mathcal{P} + b)\) for any attribute. If
+\(a(\mathcal{P})\) is location invariant, this equality holds for all
+\(b \in \mathbb{R}\). Even if \(a(\mathcal{P})\) is not location
+invariant, \(a(\mathcal{P}) = a(\mathcal{P} + b)\) \emph{might} be true
+for some \(b \in \mathbb{R}\).
+
+For the next parts of the question, you will consider the KDE at
+\(y_0 = 5.25\) with the uniform kernel defined using \(h = 1\). You will
+also assume that the population variates are natural numbers:
+\(y_1, ..., y_N \in \mathbb{N}\).
+
+\begin{enumerate}
+\def\labelenumi{(\alph{enumi})}
+\setcounter{enumi}{3}
+\tightlist
+\item
+  {[}2 points{]} Determine the values of \(b \in \mathbb{R}\) for which
+  \(a(\mathcal{P}) = a(\mathcal{P} + b)\) when the attribute is the KDE
+  \(\hat{f}_1(5.25)\) with the uniform kernel.
+\end{enumerate}
+
+Since \(h = 1\), we want \(|5.25 - y_{i} - b| \leq 1\). We can think of
+this question as asking how much we can scale the natural numbers such
+that there are 2 \(y_i\) within our \(y_0 = 5.25\). We can shift it by
+\(b \leq 4.25\).
+
+\begin{enumerate}
+\def\labelenumi{(\alph{enumi})}
+\setcounter{enumi}{4}
+\tightlist
+\item
+  {[}2 points{]} For scale transformations, it is trivial that
+  \(a(\mathcal{P}) = a(m\times \mathcal{P})\) for any attribute when
+  \(m = 1\). Even if \(a(\mathcal{P})\) is not scale invariant,
+  \(a(\mathcal{P}) =a(m\times \mathcal{P})\) might be true for some
+  \(m > 0\). Determine the values of \(m > 0\) for which
+  \(a(\mathcal{P}) =a(m\times \mathcal{P})\) when the attribute is the
+  KDE \(\hat{f}_1(5.25)\) with the uniform kernel.
+\end{enumerate}
+
+\(a(\mathcal P) = a(\mathcal P \cdot m)\) holds true for
+\(m\in\mathbb{N}\).
+
+\begin{enumerate}
+\def\labelenumi{(\alph{enumi})}
+\setcounter{enumi}{5}
+\tightlist
+\item
+  {[}1 point{]} For replication, it is trivial that
+  \(a(\mathcal{P}) = a(\mathcal{P}^k)\) for any attribute with \(k = 1\)
+  repetition. Even if \(a(\mathcal{P})\) is not replication invariant,
+  \(a(\mathcal{P}) =a(\mathcal{P}^k)\) might be true for some
+  \(k \in \mathbb{N}\). Determine the values of \(k \in \mathbb{N}\) for
+  which \(a(\mathcal{P}) =a(\mathcal{P}^k)\) when the attribute is the
+  KDE \(\hat{f}_1(5.25)\) with the uniform kernel.
+\end{enumerate}
+
+Replication should not affect the KDE. Thus, \(k \in \mathbb{N}\).
+
+\newpage
+
+\hypertarget{question-3-overlaying-histograms-and-density-estimates-16-points}{%
+\subsection{QUESTION 3: Overlaying Histograms and Density Estimates
+{[}16
+points{]}}\label{question-3-overlaying-histograms-and-density-estimates-16-points}}
+
+The kernel density estimator at a fixed point \(y_0\) as introduced in
+Question 2 is a numerical attribute. We can synthesize kernel density
+estimates across a range of \(y_0\) values by plotting them. This
+process allows us estimate the unknown density function \(f\), and this
+plot of the estimated density function is a graphical attribute. The red
+curve in the plot below is one such estimated density curve. Histograms
+are another popular graphical attribute. The black boxes in the plot
+below illustrate the notion of a histogram. In this question, you will
+create plots that compare these two graphical attributes for the same
+data.
+
+\begin{enumerate}
+\def\labelenumi{(\alph{enumi})}
+\tightlist
+\item
+  {[}2 points{]} You will first create a function
+  \texttt{kde\_gaussian()} that takes three inputs: a vector \texttt{y}
+  of numeric data, a single point \texttt{y0}, and a non-negative
+  bandwidth \texttt{h}. Using these inputs and the formula from Question
+  2, your function should return the kernel density estimate
+  \(\hat{f}(y_0)\) based on data \texttt{y} and the Gaussian kernel. You
+  should not need to use a \texttt{for} loop or \texttt{apply} function
+  for this part of the question.
+\end{enumerate}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{gaussian\_k }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(v, h) \{}
+  \FunctionTok{return}\NormalTok{ (}\DecValTok{1}\SpecialCharTok{/}\NormalTok{(}\FunctionTok{sqrt}\NormalTok{(}\DecValTok{2}\SpecialCharTok{*}\NormalTok{pi)}\SpecialCharTok{*}\NormalTok{h)}\SpecialCharTok{*}\FunctionTok{exp}\NormalTok{(}\SpecialCharTok{{-}}\NormalTok{(}\DecValTok{1}\SpecialCharTok{/}\DecValTok{2}\NormalTok{)}\SpecialCharTok{*}\NormalTok{(v}\SpecialCharTok{/}\NormalTok{h)}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{))}
+\NormalTok{\}}
+\NormalTok{kde\_gaussian }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(y, y0, h) \{}
+  \FunctionTok{return}\NormalTok{ (}\DecValTok{1}\SpecialCharTok{/}\FunctionTok{length}\NormalTok{(y) }\SpecialCharTok{*} \FunctionTok{sum}\NormalTok{(}\FunctionTok{gaussian\_k}\NormalTok{(y0 }\SpecialCharTok{{-}}\NormalTok{ y, h)))}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{enumerate}
+\def\labelenumi{(\alph{enumi})}
+\setcounter{enumi}{1}
+\tightlist
+\item
+  {[}11 points{]} You will next make a function called
+  \texttt{hist\_density\_plot()} that can take in any vector \texttt{y}
+  of numeric data and overlay a histogram and kernel density estimate in
+  the same plot. This function should take the four additional inputs:
+  the bandwidth \texttt{h} for the density estimate, a vector
+  \texttt{xrange} of length two that contains the minimum and maximum
+  \(x\)-values for the plot, and inputs \texttt{xlabel} and
+  \texttt{title} used to customized the plot. The plot your function
+  produces should have
+\end{enumerate}
+
+\begin{itemize}
+\item
+  A histogram plotted on the relative scale, where the bins for the
+  histogram are not shaded. You will find the \texttt{hist()} function
+  useful here. The bins for the histogram should be created using
+  \texttt{breaks\ =\ "fd"}. The limits for the \(x\)-axis of this plot
+  should coincide with \texttt{xrange}. {[}4 points{]}
+\item
+  A density estimate computed using your \texttt{kde\_gaussian()}
+  function with bandwidth \texttt{h} at 1000 evenly spaced \(y_0\)
+  points in the interval \texttt{xrange}. You may find \texttt{seq()},
+  \texttt{lines()} and \texttt{apply()} type functions useful here. The
+  density estimate should be plotted using a solid line that is a
+  different colour than the histogram. {[}4 points{]}
+\item
+  \emph{Both} the histogram and density estimate should fit entirely on
+  the \(y\)-axis of the plot. You should ensure this occurs for any
+  numeric vector \texttt{y} of data. {[}1 point{]}
+\item
+  A customizable \(x\)-axis label and plot title through the inputs
+  \texttt{xlabel} and \texttt{title}. {[}2 points{]}
+\end{itemize}
+
+Note: You must create the graph using functions available in
+\texttt{base} R (all that you need has been laid out above). You may not
+use the \texttt{density()} function to obtain the kernel density
+estimate, but you can use it to check your work.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{hist\_density\_plot }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(y, h, xrange, xlabel, title) \{}
+\NormalTok{  histogram }\OtherTok{\textless{}{-}} \FunctionTok{hist}\NormalTok{(y,}\AttributeTok{xlim=}\NormalTok{xrange,}\AttributeTok{breaks=}\StringTok{"fd"}\NormalTok{,}\AttributeTok{xlab=}\NormalTok{xlabel,}\AttributeTok{main=}\NormalTok{title,}\AttributeTok{prob=}\StringTok{"TRUE"}\NormalTok{,}\AttributeTok{col=}\StringTok{"white"}\NormalTok{)}
+\NormalTok{  y0 }\OtherTok{\textless{}{-}} \FunctionTok{seq}\NormalTok{(}\AttributeTok{from=}\NormalTok{xrange[}\DecValTok{1}\NormalTok{],}\AttributeTok{to=}\NormalTok{xrange[}\DecValTok{2}\NormalTok{], }\AttributeTok{length.out=}\DecValTok{1000}\NormalTok{)}
+\NormalTok{  estimate }\OtherTok{\textless{}{-}} \FunctionTok{sapply}\NormalTok{(y0, kde\_gaussian,}\AttributeTok{y=}\NormalTok{y,}\AttributeTok{h=}\NormalTok{h)}
+  \FunctionTok{lines}\NormalTok{(y0, estimate, }\AttributeTok{col=}\StringTok{\textquotesingle{}red\textquotesingle{}}\NormalTok{,}\AttributeTok{lwd=}\DecValTok{2}\NormalTok{)}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{enumerate}
+\def\labelenumi{(\alph{enumi})}
+\setcounter{enumi}{2}
+\tightlist
+\item
+  {[}3 points{]} In the last part of this question, you will test your
+  \texttt{hist\_density\_plot()} function on the data below. You should
+  use the bandwidth determined by Silverman's ``rule of thumb'':
+  \[h = 0.9~ n^{-1/5}\min \left\{SD_{\mathcal{S}}(y), \dfrac{IQR_{\mathcal{S}}(y)}{1.34} \right\},\]
+  where \(SD_{\mathcal{S}}(y)\) and \(IQR_{\mathcal{S}}(y)\) are the
+  \emph{sample} standard deviation and interquartile range of the data
+  \(y\) with \(n\) observations. These attributes can be computed using
+  standard functions in \texttt{base} R. The input \texttt{xrange}
+  should be the vector \texttt{c(-4,4)}. Note the plot you produce
+  should look similar to the one above.
+\end{enumerate}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{set.seed}\NormalTok{(}\DecValTok{341}\NormalTok{)}
+\NormalTok{z }\OtherTok{\textless{}{-}} \FunctionTok{rnorm}\NormalTok{(}\AttributeTok{n =} \DecValTok{100}\NormalTok{)}
+
+\NormalTok{xrange }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\SpecialCharTok{{-}}\DecValTok{4}\NormalTok{,}\DecValTok{4}\NormalTok{)}
+\NormalTok{h }\OtherTok{\textless{}{-}} \FloatTok{0.9}\SpecialCharTok{*}\DecValTok{100}\SpecialCharTok{\^{}}\NormalTok{(}\SpecialCharTok{{-}}\DecValTok{1}\SpecialCharTok{/}\DecValTok{5}\NormalTok{)}\SpecialCharTok{*}\FunctionTok{min}\NormalTok{(}\FunctionTok{sd}\NormalTok{(z),}\FunctionTok{IQR}\NormalTok{(z)}\SpecialCharTok{/}\FloatTok{1.34}\NormalTok{)}
+
+\FunctionTok{hist\_density\_plot}\NormalTok{(z,h,xrange,}\StringTok{\textquotesingle{}Range of Data\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}Histogram of Data\textquotesingle{}}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{STAT341_W24_Assignment1_files/figure-latex/unnamed-chunk-8-1.pdf}
+
+\newpage
+
+\hypertarget{question-4-r-analysis-21-points}{%
+\subsection{QUESTION 4: R Analysis {[}21
+points{]}}\label{question-4-r-analysis-21-points}}
+
+The \emph{Billboard} Hot 100 is the standard chart used by the American
+music industry to assess the popularity of songs. The chart has been
+published weekly by \emph{Billboard} Magazine since August 4, 1958. Each
+week, the chart ranks the 100 most popular songs based on data from the
+corresponding tracking period. The chart rankings are based on radio
+play, online streaming, and physical and digital sales in the United
+States.
+
+The archive of songs that reach \#1 on the chart is well documented (see
+e.g.,
+\href{https://en.wikipedia.org/wiki/List_of_Billboard_Hot_100_number_ones_of_2023}{this
+list} for the year 2023). You will work with data from songs that went
+\#1 on the \emph{Billboard} Hot 100 during the \(N = 209\) weeks between
+January 1, 2020 and December 31, 2023. These data are available in the
+\texttt{bh100.csv} file. Each row of this file corresponds to a specific
+week and the columns and their contents are described below.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 2\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 2\tabcolsep) * \real{0.8333}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+Column
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Description
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\texttt{Year} & An integer between 2020 and 2023 signifying a year. \\
+\texttt{Week} & An integer between 1 and 53 denoting the week of the
+year in which the \emph{Billboard} Hot 100 chart for that row was
+published. \\
+\texttt{Title} & A character string corresponding to the title of the
+\#1 song on the chart that week. Each song is uniquely identified by its
+title since no \emph{distinct} songs that went \#1 between 2020 and 2023
+had the same title. \\
+\texttt{Artist} & A character string signifying the artist(s) credited
+on the \#1 song. \\
+\end{longtable}
+
+\begin{enumerate}
+\def\labelenumi{(\alph{enumi})}
+\tightlist
+\item
+  {[}2 points{]} Using R, read in the data found in \texttt{bh100.csv}
+  and create a data frame with a row for each song that indicates how
+  many weeks it spent at \#1 on the \emph{Billboard} Hot 100 between
+  January 1, 2020 and December 31, 2023. Then, use the
+  \texttt{summary()} function on this variable for the number of weeks
+  and output the results.
+\end{enumerate}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{data }\OtherTok{\textless{}{-}} \FunctionTok{read.csv}\NormalTok{(}\StringTok{"bh100.csv"}\NormalTok{)}
+\NormalTok{titles }\OtherTok{=}\NormalTok{ data[}\StringTok{"Title"}\NormalTok{]}
+\NormalTok{df }\OtherTok{\textless{}{-}} \FunctionTok{as.data.frame}\NormalTok{(}\FunctionTok{table}\NormalTok{(titles))}
+
+\FunctionTok{summary}\NormalTok{(df[}\StringTok{"Freq"}\NormalTok{])}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##       Freq       
+##  Min.   : 1.000  
+##  1st Qu.: 1.000  
+##  Median : 1.000  
+##  Mean   : 3.074  
+##  3rd Qu.: 3.250  
+##  Max.   :16.000
+\end{verbatim}
+
+\begin{enumerate}
+\def\labelenumi{(\alph{enumi})}
+\setcounter{enumi}{1}
+\tightlist
+\item
+  {[}4 points{]} Let the \emph{population} variance of the number of
+  weeks spent at \#1 be the attribute of interest so that
+  \(a(\mathcal{P})=\sum_{i = 1}^N(y_i - \bar{y})^2/N\). The influence of
+  song \(u\) on \(a(\mathcal{P})\) is \(\Delta(a,u)\) from the course
+  notes. Construct an influence plot of \(\Delta\) vs.~the observation
+  number. Identify the song(s) with the largest influence on the
+  population variance attribute and determine their title(s). Based on
+  the data frame you created in part (a), describe why the song(s) have
+  such a large influence.
+\end{enumerate}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{z }\OtherTok{\textless{}{-}}\NormalTok{ df[[}\StringTok{"Freq"}\NormalTok{]]}
+\NormalTok{N }\OtherTok{=} \FunctionTok{length}\NormalTok{(z)}
+\NormalTok{pop\_var }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(p) \{}
+  \FunctionTok{return}\NormalTok{((}\FunctionTok{sum}\NormalTok{((p }\SpecialCharTok{{-}} \FunctionTok{mean}\NormalTok{(p))}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{))}\SpecialCharTok{/}\NormalTok{N)}
+\NormalTok{\}}
+
+\NormalTok{with\_u }\OtherTok{\textless{}{-}} \FunctionTok{pop\_var}\NormalTok{(z)}
+
+\NormalTok{delta }\OtherTok{=} \FunctionTok{rep}\NormalTok{(}\DecValTok{0}\NormalTok{, }\FunctionTok{length}\NormalTok{(z))}
+\ControlFlowTok{for}\NormalTok{ (i }\ControlFlowTok{in} \DecValTok{1}\SpecialCharTok{:}\FunctionTok{length}\NormalTok{(z)) \{}
+\NormalTok{  delta[i] }\OtherTok{=} \FunctionTok{pop\_var}\NormalTok{(z) }\SpecialCharTok{{-}}\NormalTok{ (}\DecValTok{1}\SpecialCharTok{/}\NormalTok{(N}\DecValTok{{-}1}\NormalTok{)}\SpecialCharTok{*}\FunctionTok{sum}\NormalTok{((z }\SpecialCharTok{{-}} \FunctionTok{mean}\NormalTok{(z))}\SpecialCharTok{\^{}}\DecValTok{2}\NormalTok{) }\SpecialCharTok{{-}}\NormalTok{ z[i])}
+\NormalTok{\}}
+
+\FunctionTok{plot}\NormalTok{(z, delta, }\AttributeTok{main=}\StringTok{"Influence Plot"}\NormalTok{, }\AttributeTok{pch=}\DecValTok{19}\NormalTok{,}\AttributeTok{col=}\FunctionTok{adjustcolor}\NormalTok{(}\StringTok{"black"}\NormalTok{, }\AttributeTok{alpha =} \FloatTok{0.2}\NormalTok{),}
+     \AttributeTok{xlab=}\StringTok{"Number of Days (y)"}\NormalTok{, }\AttributeTok{ylab =} \FunctionTok{bquote}\NormalTok{(Delta))}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{STAT341_W24_Assignment1_files/figure-latex/unnamed-chunk-10-1.pdf}
+
+The song Last Night, appears 16 times at the \#1 spot. It has such a
+large influence because it is observed very frequently, but most songs
+appear only once or twice at the \#1 spot. As an outlier, this causes it
+to have a larger influence on the variance.
+
+\begin{enumerate}
+\def\labelenumi{(\alph{enumi})}
+\setcounter{enumi}{2}
+\tightlist
+\item
+  {[}4 points{]} Using the \texttt{hist\_density\_plot()} function you
+  created in Question 3, construct a plot that visualizes the histogram
+  and density estimate for the the number of weeks spent at \#1 variate.
+  The bandwidth \texttt{h} should be determined using Silverman's ``rule
+  of thumb'' introduced in Question 3 and \texttt{xrange} should be
+  \texttt{c(-1,\ 18)}. Be sure to label the axes and titles
+  informatively. Given your plot, does the histogram or density estimate
+  better summarize the data, and why?
+\end{enumerate}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{xrange }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\SpecialCharTok{{-}}\DecValTok{1}\NormalTok{, }\DecValTok{18}\NormalTok{)}
+\NormalTok{h }\OtherTok{\textless{}{-}} \FloatTok{0.9}\SpecialCharTok{*}\DecValTok{100}\SpecialCharTok{\^{}}\NormalTok{(}\SpecialCharTok{{-}}\DecValTok{1}\SpecialCharTok{/}\DecValTok{5}\NormalTok{)}\SpecialCharTok{*}\FunctionTok{min}\NormalTok{(}\FunctionTok{sd}\NormalTok{(z),}\FunctionTok{IQR}\NormalTok{(z)}\SpecialCharTok{/}\FloatTok{1.34}\NormalTok{)}
+\FunctionTok{hist\_density\_plot}\NormalTok{(z,h,xrange,}\AttributeTok{title=}\StringTok{"Billboard \#1 Song Frequency"}\NormalTok{,}
+                  \AttributeTok{xlabel=}\StringTok{"Weeks at \#1"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{STAT341_W24_Assignment1_files/figure-latex/unnamed-chunk-11-1.pdf}
+
+In the remainder of this question, we will explore the density estimate
+for this data set. We will do so by generating a sample from the
+distribution with density function \(f = \hat{f}\), the estimated
+density function produced in the previous plot. We will use rejection
+sampling to obtain this sample.
+
+\href{https://en.wikipedia.org/wiki/Rejection_sampling}{Rejection
+sampling} transforms a sample from a distribution with density function
+\(g(y)\) into a sample from a distribution with density function
+\(f(y)\). Rejection sampling is useful when it is easy to sample from
+\(g(y)\) but difficult to sample from \(f(y)\). Rejection sampling uses
+a constant \(M > 0\) such that \(f(y) \le Mg(y)\) for all \(y\) to
+repeatedly implement the following steps:
+
+\begin{itemize}
+\item
+  Generate \(y^* \sim g(y)\) and \(u^*\) from the uniform
+  \(\mathcal{U}(0,1)\) distribution
+\item
+  If \(u^* \le \dfrac{f(y^*)}{Mg(y^*)}\), keep \(y^*\). Otherwise,
+  reject \(y^*\).
+\end{itemize}
+
+It can be shown that the sample of the retained \(y^*\) values is indeed
+a sample from \(f(y)\). We illustrate this fact in the below figure with
+a simple example, where \(g(y) = 1\) for \(0 < y < 1\) and \(f(y) = 2y\)
+for \(0 < y < 1\). Here, we used \(M = 2\). The left plot shows the
+\((y^*, u^*)\) combinations that were retained in green (below the solid
+line) and those that were rejected in orange (above the solid line).
+When considering the orange and green points together, we can see that
+the \(y^*\) values were originally generated from a uniform
+\(\mathcal{U}(0,1)\) distribution that corresponds to \(g(y) = 1\) for
+\(0 < y < 1\). The right plot shows the histogram of the \(y^*\) values
+that were retained. This histogram aligns nicely with the density
+function \(f(y) = 2y\) for \(0 < y < 1\) given by the solid blue line in
+the left plot.
+
+You will implement rejection sampling in stages over the next parts of
+this question.
+
+\begin{enumerate}
+\def\labelenumi{(\alph{enumi})}
+\setcounter{enumi}{3}
+\tightlist
+\item
+  {[}2 points{]} First, you will generate 50000 \(y^*\) values from the
+  uniform \(\mathcal{U}(-1,18)\) distribution. This can be done using
+  built-in functions in \texttt{base} R. Then, compute \(\hat{f}(y^*)\)
+  for each of these values using the \texttt{kde\_gaussian()} function
+  you created in Question 3 with the bandwidth \texttt{h} you computed
+  in part (c) of this question.
+\end{enumerate}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{ystar }\OtherTok{\textless{}{-}} \FunctionTok{runif}\NormalTok{(}\DecValTok{50000}\NormalTok{, }\SpecialCharTok{{-}}\DecValTok{1}\NormalTok{, }\DecValTok{18}\NormalTok{)}
+
+\NormalTok{f }\OtherTok{\textless{}{-}} \FunctionTok{sapply}\NormalTok{(ystar, kde\_gaussian,}\AttributeTok{y=}\NormalTok{z,}\AttributeTok{h=}\NormalTok{h)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{enumerate}
+\def\labelenumi{(\alph{enumi})}
+\setcounter{enumi}{4}
+\tightlist
+\item
+  {[}3 points{]} Next, you will generate 50000 \(u^*\) values. You will
+  then compute the ratios \(f(y^*) \div Mg(y^*)\) from the second bullet
+  point earlier to decide whether to reject or retain the \(y^*\) value.
+  You should use \(M = 7.25\) and discern \(f\) and \(g\) based on
+  information provided earlier in this question.
+\end{enumerate}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{ustar }\OtherTok{\textless{}{-}} \FunctionTok{runif}\NormalTok{(}\DecValTok{50000}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{1}\NormalTok{)}
+\NormalTok{M }\OtherTok{\textless{}{-}} \FloatTok{7.25}
+\NormalTok{g }\OtherTok{\textless{}{-}} \FunctionTok{sapply}\NormalTok{(ystar,dunif,}\AttributeTok{min=}\SpecialCharTok{{-}}\DecValTok{1}\NormalTok{,}\AttributeTok{max=}\DecValTok{18}\NormalTok{)}
+\NormalTok{data }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{()}
+\ControlFlowTok{for}\NormalTok{ (i }\ControlFlowTok{in} \DecValTok{1}\SpecialCharTok{:}\DecValTok{50000}\NormalTok{) \{}
+  \ControlFlowTok{if}\NormalTok{ (ustar[i] }\SpecialCharTok{\textless{}=}\NormalTok{ (f[i]}\SpecialCharTok{/}\NormalTok{(M}\SpecialCharTok{*}\NormalTok{g[i]))) \{}
+\NormalTok{    data }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(data, ystar[i])}
+\NormalTok{  \}}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{enumerate}
+\def\labelenumi{(\alph{enumi})}
+\setcounter{enumi}{5}
+\tightlist
+\item
+  {[}2 points{]} You will now plot a histogram of your retained \(y^*\)
+  values on the relative scale, where the bins for the histogram are
+  unshaded and created using \texttt{breaks\ =\ "fd"}. The limits for
+  the \(x\)-axis of this plot should coincide with \texttt{xrange} used
+  in part (c) of this question. Remember to include informative titles
+  and axis labels.
+\end{enumerate}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{hist}\NormalTok{(data, }\AttributeTok{breaks=}\StringTok{"fd"}\NormalTok{,}\AttributeTok{xlim=}\NormalTok{xrange,}\AttributeTok{main=}\StringTok{"Rejection Sample"}\NormalTok{, }\AttributeTok{xlab=}\StringTok{"Number of Weeks at \#1"}\NormalTok{,}\AttributeTok{prob=}\ConstantTok{TRUE}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{STAT341_W24_Assignment1_files/figure-latex/unnamed-chunk-14-1.pdf}
+
+\begin{enumerate}
+\def\labelenumi{(\alph{enumi})}
+\setcounter{enumi}{6}
+\tightlist
+\item
+  {[}3 points{]} Lastly, you will use the sample of your retained
+  \(y^*\) values to estimate \(Pr(Y < 1)\), where \(Y\) is the random
+  variable with density function \(\hat{f}\) from part (c). Based on the
+  formula for the kernel density estimator from Question 2, why is this
+  probability greater than 0 when the Gaussian kernel is used? Briefly,
+  what do the results from this question suggest about using kernel
+  density estimation to summarize data from distributions with bounded
+  support.
+\end{enumerate}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{pr\_y }\OtherTok{\textless{}{-}} \FunctionTok{sum}\NormalTok{(data }\SpecialCharTok{\textless{}} \DecValTok{3}\NormalTok{)}\SpecialCharTok{/}\DecValTok{50000}
+\FunctionTok{print}\NormalTok{(pr\_y)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 0.09786
+\end{verbatim}
+
+The probabilty is 0.09606.
+
+Based on the formula for the KDE in Question 2, the probability is
+greater than 0 when the Gaussian kernel is used because the the kernel
+is simply the gaussian pdf with a mean of 0, and due to the symmetry of
+the distribution, it follows that there are values where \(Y\)
+\textless{} 1.
+
+The results from this question suggests that using kernel density
+estimation to summarize data from distributions with bounded support is
+an alternative to sampling from a difficult distribution and instead we
+can use a simpler distribution and use rejection sampling instead to
+achieve similar results.
+
+\end{document}

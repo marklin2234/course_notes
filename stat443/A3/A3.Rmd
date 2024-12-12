@@ -1,0 +1,258 @@
+---
+title: "STAT443 A3"
+author: "Mark Lin"
+date: "`r Sys.Date()`"
+output:
+  pdf_document: default
+---
+
+# Q1a)
+
+```{r, setup=TRUE}
+data <- read.csv("Salmon.csv", header=TRUE)
+SalmonTS <- ts(data,start=c(2012, 1), end=c(2021,12), frequency=12)
+set.seed(123)
+```
+
+```{r}
+plot(SalmonTS)
+acf(SalmonTS,lag.max = 36)
+```
+Taking a look at the plot of `SalmonTS`, we can see a both a trend and
+seasonality pattern. From the ACF plot of `SalmonTS`, we can confirm there is
+seasonality with a period of 12. We can also notice a linear decay in the,
+unreliably, by expanding the acf `lag.max` to 36, indicating a linear trend
+as well. I can conclude that this series is not stationary.
+
+\newpage
+
+# Q1b)
+
+```{r}
+training.data <- window(SalmonTS, end=c(2020,12))
+test.data <- window(SalmonTS, start=c(2021,1))
+
+ses.model <- HoltWinters(training.data, beta=FALSE,gamma=FALSE)
+des.model <- HoltWinters(training.data,gamma=FALSE)
+hw.additive <- HoltWinters(training.data,seasonal="additive")
+hw.multiplicative <- HoltWinters(training.data,seasonal="multiplicative")
+
+pred.ses <- predict(ses.model,n.ahead=12)
+pred.des <- predict(des.model,n.ahead=12)
+pred.hw.additive <- predict(hw.additive,n.ahead=12)
+pred.hw.multiplicative <- predict(hw.multiplicative,n.ahead=12)
+
+apse.ses <- mean((pred.ses - test.data)^2)
+apse.des <- mean((pred.des - test.data)^2)
+apse.hw.additive <- mean((pred.hw.additive - test.data)^2)
+apse.hw.multiplicative <- mean((pred.hw.multiplicative - test.data)^2)
+
+apse.ses
+apse.des
+apse.hw.additive
+apse.hw.multiplicative
+```
+Based on the APSE, we want to  would want to choose the multiplicative HW
+model.
+
+```{r}
+full.hw.multiplicative <- HoltWinters(SalmonTS,seasonal="multiplicative")
+fitted.values <- full.hw.multiplicative$fitted[,1]
+forecast.values <- predict(full.hw.multiplicative, n.ahead=12)
+combined.values <- ts(c(fitted.values, forecast.values),start=c(2012, 1),end=c(2022,12), frequency=12)
+
+plot(SalmonTS,xlim=c(2012,2023))
+lines(combined.values,lwd=1,col="red")
+```
+
+\newpage
+
+# Q1c)
+
+```{r}
+B12data <- diff(data$X1607, lag=12)
+par(mfrow=c(1,2))
+plot(B12data)
+acf(B12data)
+BB12data <- diff(B12data, lag=1)
+par(mfrow=c(1,2))
+plot(BB12data)
+
+residuals <- data.frame(
+  Index = time(residuals(full.hw.multiplicative)),
+  Residuals = as.numeric(residuals(full.hw.multiplicative))
+)
+
+par(mfrow=c(1,2))
+acf(BB12data)
+acf(residuals$Residuals)
+```
+
+After deseasonalizing by differencing by 12, I noticed there was still a trend
+to the data, through the slow linear decay in the acf plot. Trend differencing
+by 1 gives us data that is stationary, which we can confirm with the acf plot.
+
+Comparing it to the acf plot of my model residuals, the HW multiplicative
+model perofmrs better than differencing for this data. The acf plot indicates
+they are less correlated with fewer spikes above the 95% interval.
+
+\newpage
+
+# Q2a)
+
+$$
+\begin{aligned}
+E(X_t)&=E(Z_t+0.5Z_{t-1}-Z_{t-2}) \\
+E(X_t)&=0 (\text{By linearity of expectation and } E(Z_t) = 0) \\
+\\
+Var(X_t)&=Var(Z_t+0.5Z_{t-1}-Z_{t-2}) \\
+&=Var(Z_t)+0.5^2Var(Z_{t-1})-Var(Z_{t-2}) \\
+&= 0.25 < \infty \\
+\\
+Cov(X_t,X_{t+h})&=Cov(Z_t+0.5Z_{t-1}-Z_{t-2}, Z_{t+h}+0.5Z_{t+h-1}-Z_{t+h-2}) \\
+&=Cov(Z_t,Z_{t+h})+0.5Cov(Z_t,Z_{t+h-1})-Cov(Z_t,Z_{t+h-2}) \\
+&+0.5Cov(Z_{t-1},Z_{t+h})+0.25Cov(Z_{t-1},Z_{t+h-1})-0.5Cov(Z_{t-1},Z_{t+h-2})\\
+&-Cov(Z_{t-2},Z_t)-0.5Cov(Z_{t-2},Z_{t+h-1})+Cov(Z_{t-2},Z_{t+h-2})
+\end{aligned}
+$$
+
+Note:
+$$
+Cov(Z_t,Z_{t+h})=
+\begin{cases}
+1 & h=0 \\
+0 & o/w
+\end{cases}
+$$
+
+Thus, $Cov(X_t,X_{t+h})$ is a stationary process, since it is only a 
+function of $h$.
+
+\newpage
+
+# Q2b)
+
+From part (a), we can find:
+
+$$
+\gamma(0)=2.25 \\
+\gamma(1)=0 \\
+\gamma(2)=-1
+$$
+
+```{r}
+A <- matrix(c(2.25,0,-1,0,2.25,0,-1,0,2.25),nrow=3,ncol=3)
+a <- solve(A) %*% c(2.25,0,-1)
+```
+
+Thus, the best linear predictor is $X_{t+1}=X_t$.
+
+\newpage
+
+# Q2c)
+
+When $h\geq 3$ then $X_{t+h}$ is uncorrelated with $X_t$. The best linear
+predictor is then just the mean. Since $X_t$ is stationary, from (a), we get
+$\hat X_{t+h}=0$.
+
+\newpage
+
+# Q3a)
+
+$$
+\begin{aligned}
+E[(X_{n+h}-\phi(X_n))^4]&=E[(X_{n+h}-\phi X_n)^2]^2 \\
+&=Var(X_{n+h}-\phi(X_n))^2 \\
+&=Var(X_{n+h}+\phi^2Var(X_n)-2\phi Cov(X_{n+h},X_n) \\
+&= 2 +2\phi^2-4\phi^{(1-|h|)}
+\end{aligned}
+$$
+
+\newpage
+
+# Q3b)
+
+$$
+\begin{aligned}
+&\frac{d}{d\phi}2 +2\phi^2-4\phi^{(1-|h|)} \\
+\phi&=(1-|h|)^{(1/|h|)}
+\end{aligned}
+$$
+
+This gives us the best predictor as $\hat X_{t+h}=(2^{|-h|}-\phi)X_n$
+
+This is minimized when $\phi=2^{|-h|}$.
+
+\newpage
+
+# Q3c)
+
+$$
+\begin{aligned}
+E[(X_{n+2}-(1-2)^{(1/2)}\times X_n)^4]&=0.25
+\end{aligned}
+$$
+The risk for the 2-step forecast is $0.25$
+
+\newpage
+
+# Q3d)
+
+```{r}
+data <- read.csv("Q3.csv",header=TRUE)
+x500 <- data[500,]
+h <- 3
+phi <- -1.259921
+x503 <- phi * x500
+
+risk <- 2+2*(1 - abs(h))^(2/abs(h)) - 4 * (1 - abs(h))^(1-abs(h))
+risk
+```
+
+\newpage
+
+# Q4a)
+
+We need to satisfy: $1-\alpha^2B^2$ s.t. the roots lie outside
+the unit circle. This is true when $|\alpha|<1|$.
+
+It must also satisfy: $(1-(1/(1-\alpha))B)$ s.t. the roots lie outside the
+unit circle. Thus, $|\alpha|<1$.
+
+\newpage
+
+# Q4b)
+
+We also need to satisfy $1-\alpha^2B^2$. Thus, the process is causal
+for $|alpha|<1$.
+
+\newpage
+
+# Q4c)
+
+$1-(1/(1-\alpha))B$. Roots must lie outside unit circle. Thus,
+$|1-\alpha|>1\implies\alpha <0\text{ or }\alpha>2$ 
+
+\newpage
+
+# Q4d)
+
+$$
+\begin{aligned}
+X_t-(0.5)^2X_{t-2}&=Z_t-2Z_{t-1} \\
+X_t-0.25X_{t-2}&=Z_t-2Z_{t-1}
+\end{aligned}
+$$
+
+To get the $MA(\infty)$ representation:
+
+$$
+\begin{aligned}
+X_t&=Z_t-2Z_{t-1}+0.25X_{t-2} \\
+X_{t-2}&=Z_{t-2}-2Z_{t-3}+0.25X_{t-4} \\
+&\vdots
+\end{aligned}
+$$
+$$
+X_t=Z_t-2Z_{t-1}+0.25Z_{t-2}-0.5Z_{t-3}+0.00625Z_{t-4}+\dots
+$$

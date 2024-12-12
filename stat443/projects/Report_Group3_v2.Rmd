@@ -1,0 +1,961 @@
+---
+title: "Predicting the Goals per Game for the NHL’s Leading Scorer"
+output: pdf_document
+indent: true
+
+date: "2024-12-04"
+
+---
+\newpage
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+# Problem
+
+  The NHL, National Hockey League, is the most esteemed hockey league, attracting the best players from around the world to compete on the most competitive stage. Throughout the history of the NHL, there have been major technological advances, rule changes, and changes in skill that have all had profound impacts on the flow of the game.
+
+  In the early days of the league, goals were scored much more often, and players scored more goals per game, at a rate well above anything considered possible in the game today.  As the game of hockey moves into the future, and new star players outpace existing ones, we are interested in predicting the total goals that the leading scorer will score in the next NHL regular season. The purpose of this analysis is multifaceted. From the conclusions, insights can be made into who the leading scorer might be, sports betting odds can be set on totals or futures to win the scoring race, and sports analysts can discuss the relevance to how the game is shifting, and how scoring trends change over time.
+
+  To approach this, data was gathered over the entire history of the NHL, spanning years 1917 - 2024. For each of these seasons, the name of the player, number of goals, games played, and total number of games each team played in the regular season was collected, forming the main dataset for further analysis.
+
+# Plan
+
+  In predicting the number of goals, there was a decision to be made on which series of data to analyze. There was data for the average number of goals scored per game by the leading scorer per game they were on the active roster for and for the average number of goals scored per game relative to the total number of games played in the season; the former being the player’s adjusted per game performance. The former pointed at predicting the number of goals scored per game played in, and then predicting the number of games played in, to arrive at a final goals per entire season figure. This approach, which would have required two rounds of predictions and driven up error unnecessarily, was discarded. Instead, the analysis was done on the number of goals scored on average, per game, of the regular season, whether the player actively played in the game or not. This decision allowed for implicit normalization of the variability of totals games in each season over time; earlier in the history of the NHL, fewer games were played per season.
+  
+  Once the final data was established, it was moved into analysis software where different statistical models were tested for fit and predictive power. When examined, the dataset naturally exhibited no seasonality and a non-linear trend. Further investigation pointed to heteroskedasticity, so an optimal Box-Cox transformation was applied. These observations lead to the decision of choosing to test orthogonal polynomial regression models, Holt-Winters, and (S)ARIMA models.
+
+  After fitting each of the models to the training set of the data, their predictive powers were measured on the test set. Values of APSE were collected, and residual diagnostics were analyzed to determine the best model to fit the data, which then provided prediction capabilities for upcoming seasons, our variable of interest.
+
+# Data:
+
+  The online source the data was gathered from included tabular information on the leading scorer’s stats covering all seasons in the NHL’s history. This included their name, active team, number of goals and assists, and number of games played in the season. This was later supplemented with the data from another online source which was retrieved to find the total number of games played in the season.
+
+  From the collected data, there were initial steps taken to change it into a workable format. There were duplicate values at time indices for when multiple players tied the scoring race and consequently had the same number of goals. There was also a missing value for the season 2004-2005, which was imputed by averaging the previous 5 years.
+
+  After careful consideration of the implications of using different portions of the given data, it was eventually decided that the time series for analysis would be the goals scored per total number of regular season. We decided not to simply use the number of goals scored by the leading scorer in each season because the number of games played differs season by season (older seasons played less games) and also differs from player-to-player (for example, a player may miss some games due to injury.)
+
+  The 107 observations of data were split into the first 85 entries for the training set, and the last 22 for the test set. Since the changes over time in the data were key to modelling the future behavior, no cross-validation methods were used. There were also no notable outliers in either set of data.
+
+```{r,include=FALSE}
+library(readr) 
+library(tidyr)
+library(dplyr)
+library(MASS)
+library(astsa)
+
+set.seed(123) 
+
+data <- read.csv("Data_Group3-Modified.csv", header=TRUE) 
+
+data <- data[!duplicated(data$X), ] 
+
+data <- data[-1,] 
+
+## Impute value 
+
+impute_previous_5_years <- function(data, year, column) { 
+
+  # Get the rows from the previous 5 years 
+
+  prev_years <- data %>% filter(X < year) %>% arrange(desc(X)) %>% head(5) 
+
+  # Calculate the mean of the previous 5 years 
+
+  avg_value <- mean(prev_years[[column]], na.rm = TRUE) 
+
+  return(avg_value) 
+
+} 
+
+new_row <- data.frame( 
+  Season = NA, 
+  Player = NA, 
+  X = 2005, 
+  G = impute_previous_5_years(data, 2005, "G"), 
+  GP = NA, 
+  G.GP = NA, 
+  Leage.average.goals.team.game = NA, 
+  Reg.Season.games = impute_previous_5_years(data, 2005, "Reg.Season.games"), 
+  X.1 = NA 
+
+) 
+
+data <- bind_rows(data, new_row) %>% arrange(X) 
+
+## Normalize data 
+
+data <- data$G / data$Reg.Season.games 
+
+data.ts <- ts(data, start=1918, end=2024,frequency=1) 
+  
+raw.training.data <- window(data.ts, end=2002) 
+
+raw.test.data <- window(data.ts, start=2003)
+orig.test.data <- raw.test.data
+```
+
+Below is a plot of our data set split into test and training set. We have split the training and test set according to an 80/20 split so our test set is from 1918-2002, and test set is from 2003-2024.
+
+```{r,include=TRUE,fig.align='center'}
+
+# Plot data with training and test set indicated
+plot(raw.training.data, col = "firebrick", xlim=c(1916,2025), lwd=2,
+     main = "Goals per Regular Season Game for Leading Scorer",
+     ylab = "Goals/# of Regular Season Games (G/RSG)")
+lines(raw.test.data, col = "steelblue", lwd=2)
+legend("topright", lwd=2,legend = c("Training set", "Test set"),col = c("firebrick", "steelblue"))
+```
+```{r,include=FALSE}
+# Want to stabilize variance
+# Test for optimal lambda(for Box-Cox transformation):
+
+y=as.vector(data.ts)
+
+boxcox.model = boxcox(lm(y~ 1))
+optimal.lambda = boxcox.model$x[which.max(boxcox.model$y)]
+
+transformed.data = -data.ts^optimal.lambda
+
+training.data = window(transformed.data, start = 1918, end = 2002)
+test.data = window(transformed.data, start = 2003)
+
+```
+Below is a plot of the transformed data after using Box-Cox to stabilize variance:
+```{r,include=TRUE,fig.align='center'}
+# Plot data with training and test set indicated
+plot(transformed.data,  lwd=2,
+     main = "Transformed G/RSG for Leading Scorer",
+     ylab = "-G/RSG ^ -1.2323")
+
+```
+
+# Analysis
+
+The first model fit to the data was the Holt-Winters model. Due to lack of seasonality, we did not include the additive and multiplicative case and simply fit a simple and double exponential smoothing model. This gave us APSE values of 0.06568527 for simple exponential smoothing and 0.3270332 for double exponential smoothing.
+
+Clearly, the simple exponential smoothing model outperforms our double exponential smoothing model. It was established that a simple exponential smoothing model is a good 1-lag predictor, being a rolling average of past data. However, it lacked the predictive power for general h-lag prediction.  
+
+Below is a plot of our simple exponential smoothing model with a 5 year forecast.
+
+```{r,include=FALSE}
+# SETUP
+set.seed(123)
+library(dplyr)
+library(tidyr)
+library(MASS)
+data <- read.csv("Data_Group3-Modified.csv", header=TRUE)
+data <- data[!duplicated(data$X), ]
+data <- data[-1,]
+
+## Impute value
+
+impute_previous_5_years <- function(data, year, column) {
+  # Get the rows from the previous 5 years
+  prev_years <- data %>% filter(X < year) %>% arrange(desc(X)) %>% head(5)
+  
+  # Calculate the mean of the previous 5 years
+  avg_value <- mean(prev_years[[column]], na.rm = TRUE)
+  
+  return(avg_value)
+}
+
+new_row <- data.frame(
+  Season = NA,
+  Player = NA,
+  X = 2005,
+  G = impute_previous_5_years(data, 2005, "G"),
+  GP = NA,
+  G.GP = NA,
+  Leage.average.goals.team.game = NA,
+  Reg.Season.games = impute_previous_5_years(data, 2005, "Reg.Season.games"),
+  X.1 = NA
+)
+
+data <- bind_rows(data, new_row) %>% arrange(X)
+
+## Normalize data
+
+data <- data$G / data$Reg.Season.games
+
+data.ts <- ts(data, start=1918, end=2024,frequency=1)
+
+plot(data.ts)
+acf(data.ts)
+
+y=as.vector(data.ts) 
+
+boxcox.model = boxcox(lm(y~1))
+optimal.lambda = boxcox.model$x[which.max(boxcox.model$y)] 
+transformed.data = -data.ts^optimal.lambda 
+training.data = window(transformed.data, start = 1918, end = 2002)
+test.data = window(transformed.data, start = 2003)
+orig.test.data = window(data.ts, start=2003)
+library(glmnet)
+# Exponential and double exponential smoothing
+
+ses.model <- HoltWinters(training.data, beta=FALSE,gamma=FALSE)
+des.model <- HoltWinters(training.data,gamma=FALSE)
+
+pred.ses <- predict(ses.model,n.ahead=22)
+pred.des <- predict(des.model,n.ahead=22)
+
+apse.ses <- mean((pred.ses - test.data)^2)
+apse.des <- mean((pred.des - test.data)^2)
+
+apse.ses
+apse.des
+
+model <- HoltWinters(transformed.data, beta=FALSE, gamma=FALSE)
+fitted.values <- model$fitted[,1]
+forecast.values <- predict(model, n.ahead=5)
+combined.values <- ts(c(fitted.values, forecast.values),
+                      start=1918,end=2029, frequency=1)
+combined.values <- (-combined.values)^(1/optimal.lambda)
+```
+
+```{r, include=TRUE,fig.align='center'}
+plot(data.ts,xlim=c(1918,2029), main = "Simple Exponential Smoothing Model", ylab = "Goals/# of Regular Season Games (G/RSG)")
+lines(combined.values, lwd=2, col="red")
+```
+
+This is a good start, but we may be able to find a better fit for the trend.
+Overall, for the purpose of answering the proposed problem statement, this model was ranked favorably.
+
+```{r, include=FALSE}
+# Regression
+degrees <- 2:10
+poly.t <- poly(as.vector(time(transformed.data)),15)
+training.idx <- 1:85
+test.idx <- 86:107
+
+alphas <- c(0,0.25,0.5,0.75,1)
+
+optimal_fit <- list()
+
+for (a in alphas) {
+  apse_values <- c()
+  for (i in seq_along(degrees)) {
+    p <- degrees[i]
+    poly.training.time <- poly.t[-test.idx, 1:p]
+    poly.test.time <- poly.t[-training.idx, 1:p]
+    CV <- cv.glmnet(as.matrix(poly.training.time), as.numeric(training.data),
+                    alpha=a,standardize=TRUE,intercept=TRUE)
+    lambda <- CV$lambda.min
+    predictions <- predict(CV, newx=as.matrix(poly.test.time), s="lambda.min")
+    predictions <- (-predictions)^(1/optimal.lambda)
+    squared_errors <- (predictions - orig.test.data)^2
+    APSE <- mean(squared_errors)
+    apse_values <- c(apse_values, APSE)
+  }
+  
+  par(mfrow=c(1,2))
+  plot(degrees, apse_values, main=paste("APSE vs Degree, Alpha = ", a))
+  
+  deg <- degrees[which.min(apse_values)]
+  plot(training.data,
+       main="Fitted Elastic Net Regression Model on Training Data")
+  
+  poly.training.time <- poly.t[-test.idx, 1:deg]
+  CV <- cv.glmnet(as.matrix(poly.training.time), as.numeric(training.data), 
+                  alpha=a,standardize=TRUE,intercept=TRUE)
+  fitted_values <- predict(CV, newx=as.matrix(poly.training.time),s="lambda.min")
+  lines(as.numeric(time(training.data)), fitted_values, col="red", lwd=2)
+  optimal_fit[[length(optimal_fit) + 1]] <- list(model = CV, degree = deg)
+}
+
+apse_values <- c()
+for (i in seq_along(optimal_fit)) {
+  fit <- optimal_fit[[i]]$model
+  deg <- optimal_fit[[i]]$degree
+  predictions <- predict(fit, newx=as.matrix(poly.t[-training.idx, 1:deg]), s="lambda.min")
+  predictions <- (-predictions)^(1/optimal.lambda)
+  squared_error <- (predictions - orig.test.data)^2
+  APSE <- mean(squared_error)
+  apse_values <- c(apse_values, APSE)
+  
+  print(paste0("Alpha = ", alphas[i], ", Degree = ", deg, ", APSE = ", APSE))
+}
+
+opt_idx <- which.min(apse_values)
+optimal.regression.model <- optimal_fit[[opt_idx]]$model
+optimal.degree <- optimal_fit[[opt_idx]]$degree
+
+print(paste0("The best model is Alpha = ", alphas[opt_idx],
+             ", Degree = ", optimal.degree))
+
+forecast.time <- 2025:2029
+poly.forecast.time <- predict(poly.t, newdata=as.numeric(forecast.time))
+fitted.values <- predict(optimal.regression.model, newx=as.matrix(poly.t[,1:optimal.degree]),s="lambda.min")
+forecast.values <- predict(optimal.regression.model, newx=as.matrix(poly.forecast.time[,1:optimal.degree]),s="lambda.min")
+combined.values <- ts(c(fitted.values, forecast.values), start=1918,end=2029, frequency=1)
+combined.values <- (-combined.values)^(1/optimal.lambda)
+```
+
+The second model fit to the data were orthogonal polynomial regression models,
+degrees 2-10. The alpha levels tested were 0,0.25,0.5,0.75, and 1. The best
+models for each alpha value were:
+
+| Alpha | Degree | APSE |
+| --- | --- | --- |
+| 0 | 5 | 0.00487 | 
+| 0.25 | 10 | 0.00632 |
+| 0.5 | 10 | 0.00620 |
+| 0.75 | 10 | 0.0083 |
+| 1 | 10 | 0.01436 |
+
+Clearly, the regression models captured the trend of the data much better than the smoothing models. The best model is Alpha = 0, Degree = 5. Below is a plot of the chosen model.
+
+```{r,out.width="75%"}
+plot(data.ts,xlim=c(1918,2029),main = "Ridge Regression Model (alpha=0, deg=5)", ylab = "Goals/# of Regular Season Games (G/RSG)")
+lines(combined.values, lwd=2, col="red")
+```
+
+To determine if this model is a good fit, we can do some residual diagnostics.
+
+The residual diagnostics of the selected polynomial model to determine normality and randomness used a Shapiro-Wilks test, a Fligner test, and runs and difference signs test to conclude that at a 0.01 significance level, the residuals are normal, random, and uncorrelated, but heteroscedastic variance.
+
+This tells us that the fit may not be the best. One option to determine its predictive accuracy is to generate a prediction interval. However, finding the standard error of a ridge regression model is beyond the scope of this course. One option to find a robust SE would be through bootstrap. 
+
+```{r}
+par(mfrow=c(2,2))
+residuals <- (-fitted.values)^(1/optimal.lambda) - data.ts
+plot(residuals, main="Residuals")
+plot(fitted.values,residuals, main="Fitted vs Residuals")
+acf(residuals, "Residual ACF")
+qqnorm(residuals, main = "QQ Plot of Residuals")
+qqline(residuals, col = "red")
+```
+
+```{r, include=FALSE}
+## Some residual diagnostics on this fit.
+shapiro.test(residuals)
+g <- cut(1:107, breaks=6, labels=1:6)
+fligner.test(residuals, g)
+randtests::difference.sign.test(residuals)
+randtests::runs.test(residuals,plot=TRUE)
+
+## Can use these residuals for ARIMA/SARIMA
+```
+
+Using this model by itself could be sufficient, but we may be able to use the residuals as a stationary process for a (S)ARIMA model. The ACF plot tells us that there is no seasonality or trend. This makes the residuals a better candidate than the differenced and transformed data as input for S(ARIMA) models. 
+
+# Box-Jenkins Methodology
+
+## Box-Jenkins Methodology on Transformed Data
+
+First, we will start the Box-Jenkins process and examine the plot, acf and pacf of our (transformed)training dataset to determine if we have stationarity. After this, we will try the Box-Jenkins method for the residuals from our optimal regression model.\newline
+```{r,include=TRUE,fig.align='center',out.width="75%"}
+#knitr::opts_chunk$set(echo = FALSE, 
+ #                     warning = FALSE,
+  #                    message = FALSE,
+   #                   fig.align = "center", 
+                      # Two following determine width and height
+                      # of the R device on which the plots are made
+     #                 fig.width = 8, 
+    #                  fig.height = 9,
+                      # last argument here determines the actual 
+                      # width of the plot as it appears in the processed
+                      # RMarkdown file
+      #                out.width = "75%",
+       #               out.height = "100%")
+
+# We now want to fit (S)ARIMA models
+#par(mfrow=c(1,1))
+plot(training.data,
+     main = "Transformed Training Set",
+     ylab = "-G/RSG ^ -1.2323")
+par(mfrow=c(1,2))
+acf(training.data)
+pacf(training.data)
+# Looking at the plot, we could argue this is stationary
+# Looking at the ACF, we could argue that there is exponential decay in the acf
+# and hence, training.data is stationary. Note, we are doubtful this is stationary,
+# but we will try identifying potential processes anyways
+
+# It looks like the acf cuts off at lag 5 (lag 7 may be a false positive) and
+# in the pacf it looks like we have exponential decay 
+#  --> try MA(5), MA(7)
+
+# OR
+# It looks like we have exp decay in the acf and the pacf cuts off after lag 1
+# (assuming lag 2 is false positive) or it cuts off after lag 2
+# --> try AR(1), AR(2)
+
+# OR
+# It looks like we have exp decay in both acf and pacf
+# --try ARMA(1,1)
+
+```
+Looking at the acf, we can argue that there is exponential decay, and hence the data is stationary.
+We are aware that this could be argued as linear decay, so we will also try differencing. However, under the assumption that our training data set is stationary, we will now look at the acf and pacf to identify models to be tentatively entertained:
+ 
+* we can see the acf cuts off at lag 5 or lag 7(lag 7 may be a false positive) and in the pacf it looks like we have exponential decay
+    + We can try MA(5) or MA(7). (Or equivalently, ARIMA(0,0,5) and ARIMA(0,0,7)) OR
+* we can argue there is exp decay in the acf and the pacf cuts off after lag 1 (assuming lag 2 is false positive) or it cuts off after lag 2
+    + We can try AR(1) or AR(2). (Or equivalently, ARIMA(1,0,0) and ARIMA(2,0,0)) OR
+* we can argue that we have exp decay in both acf and pacf
+    + We can start trying ARMA(p=1,q=1) and try different combinations of p and q 
+
+
+Now, we will take the other side of the argument and assume that the training data is not stationary and will try regular differencing. 
+\newline
+Below are the plot, acf, and pacf of the (transformed) differenced training data set:
+```{r,include=TRUE,fig.align='center',out.width="75%"}
+
+#let's do regular differencing now
+Bx <- diff(training.data)
+par(mfrow=c(1,1))
+plot(Bx,
+     main = "Differenced (Transformed) Training Set",
+     ylab = "Bx")
+par(mfrow=c(1,2))
+acf(Bx)
+pacf(Bx)
+
+# This is stationary
+#For (s)ARIMA process, we have d = 1
+#ARIMA(p,d,q)
+
+# We have exp decay in the pacf, cutoff in acf after either lag 5 or 6
+#  --> could argue either MA(5) or MA(6)
+
+#Could also argue we have damped sinusoid in the acf, cutoff after either lag 
+# 2 or 4 (can argue false positives)
+# --> try AR(2), AR(4)
+
+# COuld also argue damped sinusoid in the acf, exp decay in pacf
+# --> try ARMA(1,1)
+
+```
+Looking at the acf, we can argue that there is exponential/sinusoidal decay, and hence the data is stationary. Since our data is stationary, we will now look at the acf and pacf to identify models to be tentatively entertained:
+ 
+* we can see the acf cuts off at lag 5 or lag 6 (lag 6 may be a false positive) and in the pacf it looks like we have exponential decay
+    + We can try MA(5) or MA(6). (Or equivalently, ARIMA(0,1,5) and ARIMA(0,1,6)) OR
+* we can argue there is sinusoidal decay in the acf and the pacf cuts off after lag 2 (assuming lag 4 is false positive) or it cuts off after lag 4
+    + We can try AR(2) or AR(4). (Or equivalently, ARIMA(2,1,0) and ARIMA(4,1,0)) OR
+* we can argue that we have exponential or sinusoidal decay in both acf and pacf
+    + We can start trying ARMA(p=1,q=1) and try different combinations of p and q. (Or equivalently, start with ARIMA(1,1,1) and do trial and error for p and q).
+    
+After we identified these potential models, we used the $\texttt{sarima}$ function in r to perform parameter estimation and we also used this same function to perform model diagnostics for each of the potential models proposed above.
+\newline
+Of the models which passed model diagnostics, below summarizes their prediction quality. Since we care more about prediction power, we decided to chose the model based on prediction power (look for lowest APSE.) Note that these values for APSE are back on the original scale of G/RSG.
+
+```{r,include=FALSE}
+
+#Our data does not appear to have a seasonal component, so we will only be using
+# ARIMA
+
+# Fitting the proposed models:
+
+fit1 <- sarima(training.data, p=0,d=0,q=5,P=0,D=0,Q=0,S=0) # Looks decent  
+fit2 <- sarima(training.data, p=0,d=0,q=7,P=0,D=0,Q=0,S=0) # Looks decent
+fit3 <- sarima(training.data, p=1,d=0,q=0,P=0,D=0,Q=0,S=0) # Bad (Ljung-Box fails)
+fit4 <- sarima(training.data, p=2,d=0,q=0,P=0,D=0,Q=0,S=0) # could work, look for better
+fit5 <- sarima(training.data, p=1,d=0,q=1,P=0,D=0,Q=0,S=0) # could work, look for better
+fit23 <- sarima(training.data, p=2,d=0,q=1,P=0,D=0,Q=0,S=0) # could work, 
+fit24 <- sarima(training.data, p=1,d=0,q=2,P=0,D=0,Q=0,S=0) # could work
+fit25 <- sarima(training.data, p=2,d=0,q=2,P=0,D=0,Q=0,S=0) # could work
+fit26 <- sarima(training.data, p=3,d=0,q=2,P=0,D=0,Q=0,S=0) # Good
+fit27 <- sarima(training.data, p=2,d=0,q=3,P=0,D=0,Q=0,S=0) # Suspect
+
+
+fit6 <- sarima(training.data, p=0,d=1,q=5,P=0,D=0,Q=0,S=0) # No (maybe LB fails)
+fit7 <- sarima(training.data, p=0,d=1,q=6,P=0,D=0,Q=0,S=0) # Looks good
+fit8 <- sarima(training.data, p=2,d=1,q=0,P=0,D=0,Q=0,S=0) # Looks OK
+fit9 <- sarima(training.data, p=4,d=1,q=0,P=0,D=0,Q=0,S=0) # Looks good
+fit10 <- sarima(training.data, p=1,d=1,q=1,P=0,D=0,Q=0,S=0) # Looks good
+fit28 <- sarima(training.data, p=2,d=1,q=1,P=0,D=0,Q=0,S=0) # Could work (a bit sus)
+fit29 <- sarima(training.data, p=1,d=1,q=2,P=0,D=0,Q=0,S=0) # Looks good
+fit30 <- sarima(training.data, p=2,d=1,q=2,P=0,D=0,Q=0,S=0) # Looks good
+
+# Look at fit of models that passed diagnostics
+
+fit1$ICs 
+fit2$ICs
+fit4$ICs 
+fit5$ICs 
+fit7$ICs 
+fit8$ICs 
+fit9$ICs 
+fit10$ICs
+fit23$ICs
+fit24$ICs
+fit25$ICs
+fit26$ICs
+fit27$ICs
+fit28$ICs 
+fit29$ICs 
+fit30$ICs
+
+
+# Some differences in fit, but we care more about prediction power
+
+m.APSE = data.frame(model = NA, APSE = NA)
+
+# Forecasting Chosen models
+fore1 <- sarima.for(training.data, n.ahead=22, p=0,d=0,q=5,P=0,D=0,Q=0,S=0)
+title("ARIMA(0,0,5)")
+lines(test.data,col='blue',type='b',pch=16)
+
+fore2 <- sarima.for(training.data, n.ahead=22, p=0,d=0,q=7,P=0,D=0,Q=0,S=0)
+title("ARIMA(0,0,7)")
+lines(test.data,col='blue',type='b',pch=16)
+
+fore3 <- sarima.for(training.data, n.ahead=22, p=2,d=0,q=0,P=0,D=0,Q=0,S=0)
+title("ARIMA(2,0,0)")
+lines(test.data,col='blue',type='b',pch=16)
+
+fore4 <- sarima.for(training.data, n.ahead=22, p=1,d=0,q=1,P=0,D=0,Q=0,S=0)
+title("ARIMA(1,0,1)")
+lines(test.data,col='blue',type='b',pch=16)
+
+fore5 <- sarima.for(training.data, n.ahead=22, p=0,d=1,q=6,P=0,D=0,Q=0,S=0)
+title("ARIMA(0,1,6)")
+lines(test.data,col='blue',type='b',pch=16)
+
+fore6 <- sarima.for(training.data, n.ahead=22, p=2,d=1,q=0,P=0,D=0,Q=0,S=0)
+title("ARIMA(2,1,0)")
+lines(test.data,col='blue',type='b',pch=16)
+
+fore7 <- sarima.for(training.data, n.ahead=22, p=4,d=1,q=0,P=0,D=0,Q=0,S=0)
+title("ARIMA(4,1,0)")
+lines(test.data,col='blue',type='b',pch=16)
+
+fore8 <- sarima.for(training.data, n.ahead=22, p=1,d=1,q=1,P=0,D=0,Q=0,S=0)
+title("ARIMA(1,1,1)")
+lines(test.data,col='blue',type='b',pch=16)
+
+fore9 <- sarima.for(training.data, n.ahead=22, p=2,d=0,q=1,P=0,D=0,Q=0,S=0)
+title("ARIMA(2,0,1)")
+lines(test.data,col='blue',type='b',pch=16)
+
+fore10 <- sarima.for(training.data, n.ahead=22, p=1,d=0,q=2,P=0,D=0,Q=0,S=0)
+title("ARIMA(1,0,2)")
+lines(test.data,col='blue',type='b',pch=16)
+
+fore11 <- sarima.for(training.data, n.ahead=22, p=2,d=0,q=2,P=0,D=0,Q=0,S=0)
+title("ARIMA(2,0,2)")
+lines(test.data,col='blue',type='b',pch=16)
+
+fore12 <- sarima.for(training.data, n.ahead=22, p=3,d=0,q=2,P=0,D=0,Q=0,S=0)
+title("ARIMA(3,0,2)")
+lines(test.data,col='blue',type='b',pch=16)
+
+fore13 <- sarima.for(training.data, n.ahead=22, p=2,d=0,q=3,P=0,D=0,Q=0,S=0)
+title("ARIMA(2,0,3)")
+lines(test.data,col='blue',type='b',pch=16)
+
+fore14 <- sarima.for(training.data, n.ahead=22, p=2,d=1,q=1,P=0,D=0,Q=0,S=0)
+title("ARIMA(2,1,1)")
+lines(test.data,col='blue',type='b',pch=16)
+
+fore15 <- sarima.for(training.data, n.ahead=22, p=1,d=1,q=2,P=0,D=0,Q=0,S=0)
+title("ARIMA(1,1,2)")
+lines(test.data,col='blue',type='b',pch=16)
+
+fore16 <- sarima.for(training.data, n.ahead=22, p=2,d=1,q=2,P=0,D=0,Q=0,S=0)
+title("ARIMA(2,1,2)")
+lines(test.data,col='blue',type='b',pch=16)
+
+forecasted.models = list(fore1, fore2, fore3, fore4, fore5,
+                     fore6, fore7, fore8, fore9, fore10, fore11, fore12, fore13,
+                     fore14, fore15, fore16)
+
+
+fore.APSE = c()
+
+# Calculate APSE for each model above
+for (fore.model in forecasted.models){
+  pred.vals = (-fore.model$pred)^(1/optimal.lambda)
+  m.APSE = mean((raw.test.data - pred.vals)^2)
+  fore.APSE = c(fore.APSE, m.APSE)
+}
+
+arima.APSE = data.frame(model = NA, APSE = NA)
+models = c("ARIMA(0,0,5)", "ARIMA(0,0,7)", "ARIMA(2,0,0)", "ARIMA(1,0,1)",
+           "ARIMA(0,1,6)", "ARIMA(2,1,0)", "ARIMA(4,1,0)", "ARIMA(1,1,1)",
+           "ARMA(2,1)", "ARMA(1,2)", "ARMA(2,2)",
+           "ARMA(3,2)", "ARMA(2,3)", "ARIMA(2,1,1)", "ARIMA(1,1,2)", "ARIMA(2,1,2)")
+
+
+for (i in (1:length(models))){
+  arima.APSE[i,] = c(models[i], round(fore.APSE[i],8))
+}
+```
+
+| Model |  APSE | 
+|--- | --- |
+| ARMA(2,2) | 0.0078044 | 
+| ARMA(1,1) | 0.00794637 | 
+| ARMA(2,1) | 0.00804475 |
+| ARMA(1,2) | 0.00806025 | 
+| ARMA(2,3) | 0.00810402 | 
+| AR(2) | 0.00851931 |
+| ARIMA(0,1,6) | 0.00909089 |
+| MA(7) | 0.00913348 |
+| MA(5) | 0.0094111 |
+| ARMA(3,2) | 0.01039177 |
+| ARIMA(2,1,0) | 0.01077892 |
+| ARIMA(2,1,1) | 0.01107182 |
+| ARIMA(1,1,1) | 0.01118557 |
+| ARIMA(1,1,2) | 0.01134445 |
+| ARIMA(2,1,2) | 0.01135545 |
+| ARIMA(4,1,0) | 0.01155275 |
+
+```{r,include=FALSE}
+print(arima.APSE)
+# Best model based on APSE:
+#arima.APSE[which.min(arima.APSE$APSE),]
+
+```
+As we can see, the ARMA(2,2) (or equivalently, ARIMA(2,0,2)) model has the best (lowest APSE)
+\newline
+
+## Box-Jenkins Methodology on Regression Model Residuals
+
+To remove sources of non-stationarity from our dataset we also decided to try using the residuals from regression (in addition to the Box-Cox transformation to stabilize variance). For our dataset, we found that the best regression model based on its prediction power was elastic net regression where Alpha = 1, Degree = 6.
+
+We will also try the Box-Jenkins method using the residuals from this regression model and see how it compares from the methods used above.
+
+Below is the plot, acf, and pacf of the residuals from regression. Note that these residuals are back on the original scale of the data. (Since residuals can be negative we could not use the "transformed" residuals since we would not be able to transform negative values back to our original scale.)
+
+```{r,include=FALSE}
+library(glmnet) 
+degrees <- 2:10 
+poly.t <- poly(as.vector(time(transformed.data)),15) 
+training.idx <- 1:85 
+test.idx <- 86:107 
+
+alphas <- c(0,0.25,0.5,0.75,1) 
+
+optimal_fit <- list() 
+
+for (a in alphas) { 
+  apse_values <- c() 
+  for (i in seq_along(degrees)) { 
+    p <- degrees[i] 
+    poly.training.time <- poly.t[-test.idx, 1:p] 
+    poly.test.time <- poly.t[-training.idx, 1:p] 
+    CV <- cv.glmnet(as.matrix(poly.training.time), as.numeric(training.data), 
+                    alpha=a,standardize=TRUE,intercept=TRUE) 
+    lambda <- CV$lambda.min 
+    
+    predictions <- predict(CV, newx=as.matrix(poly.test.time), s="lambda.min") 
+    predictions <- (-predictions)^(1/optimal.lambda) 
+
+    squared_errors <- (predictions - orig.test.data)^2 
+
+    APSE <- mean(squared_errors) 
+    apse_values <- c(apse_values, APSE) 
+  } 
+
+  par(mfrow=c(1,2)) 
+  plot(degrees, apse_values, main=paste("APSE vs Degree, Alpha = ", a)) 
+
+  deg <- degrees[which.min(apse_values)] 
+
+  plot(training.data, 
+       main="Fitted Elastic Net Regression Model on Training Data") 
+   
+  poly.training.time <- poly.t[-test.idx, 1:deg] 
+  CV <- cv.glmnet(as.matrix(poly.training.time), as.numeric(training.data),  
+                  alpha=a,standardize=TRUE,intercept=TRUE) 
+  fitted_values <- predict(CV, newx=as.matrix(poly.training.time),s="lambda.min") 
+  lines(as.numeric(time(training.data)), fitted_values, col="red", lwd=2) 
+
+  optimal_fit[[length(optimal_fit) + 1]] <- list(model = CV, degree = deg) 
+
+} 
+
+apse_values <- c() 
+
+for (i in seq_along(optimal_fit)) { 
+  fit <- optimal_fit[[i]]$model 
+  deg <- optimal_fit[[i]]$degree 
+  predictions <- predict(fit, newx=as.matrix(poly.t[-training.idx, 1:deg]), s="lambda.min")
+  predictions <- (-predictions)^(1/optimal.lambda) 
+
+  squared_error <- (predictions - orig.test.data)^2 
+
+  APSE <- mean(squared_error) 
+
+  apse_values <- c(apse_values, APSE) 
+
+   
+
+  print(paste0("Alpha = ", alphas[i], ", Degree = ", deg, ", APSE = ", APSE)) 
+
+} 
+
+  
+
+opt_idx <- which.min(apse_values) 
+
+optimal.regression.model <- optimal_fit[[opt_idx]]$model 
+
+optimal.degree <- optimal_fit[[opt_idx]]$degree 
+
+  
+```
+```{r,include=FALSE}
+
+print(paste0("The best Elastic Net regression model is Alpha = ", alphas[opt_idx], 
+
+             ", Degree = ", optimal.degree)) 
+```
+
+```{r,include=FALSE}  
+
+forecast.time <- 2025:2033 
+
+poly.forecast.time <- predict(poly.t, newdata=as.numeric(forecast.time)) 
+
+fitted.values <- predict(optimal.regression.model, newx=as.matrix(poly.t[,1:optimal.degree]),s="lambda.min") 
+
+forecast.values <- predict(optimal.regression.model, newx=as.matrix(poly.forecast.time[,1:optimal.degree]),s="lambda.min") 
+
+combined.values <- ts(c(fitted.values, forecast.values), start=1918,end=2033, frequency=1) 
+
+combined.values <- (-combined.values)^(1/optimal.lambda) 
+
+## Some residual diagnostics on this fit.
+
+#Residuals for TRAINING SET
+#fit.reg <- optimal_fit[[opt_idx]]$model
+#deg.reg <- optimal_fit[[opt_idx]]$degree
+fitted.reg <- predict(optimal.regression.model, newx=as.matrix(poly.t[-test.idx, 1:optimal.degree]), s="lambda.min")
+fitted.reg <- (-fitted.reg)^(1/optimal.lambda)
+residuals.reg <- raw.training.data - fitted.reg
+
+#Residuals for predicted values against test set
+fitted.reg.test <- predict(optimal.regression.model, newx=as.matrix(poly.t[-training.idx, 1:optimal.degree]), s="lambda.min")
+predicted.reg.test <- (-fitted.reg.test)^(1/optimal.lambda) # Transform back to back to original scale
+
+residuals.reg.test <- orig.test.data - predicted.reg.test
+
+
+
+#Residuals FOR ENTIRE DATASET
+residuals <- transformed.data - fitted.values  
+
+fitted.values.orig.scale = (-fitted.values)^(1/optimal.lambda)
+reg.residuals.all = data.ts - fitted.values.orig.scale
+```
+
+
+```{r,include=TRUE,fig.align='center'}
+
+# Do Box-Jenkins on residuals from regression
+par(mfrow=c(1,1))
+plot(residuals.reg, ylab = "G/RSG", main = "Residuals from Optimal Regression Model")
+par(mfrow=c(1,2))
+acf(residuals.reg, main="Residuals from Regression")
+pacf(residuals.reg, main="Residuals from Regression")
+# data looks stationary since no linear decay in acf 
+#    --> proceed with Box-Jenkins
+
+# ACF cuts after lag 6 can argue PACF has very fast exp decay --> try MA(6)
+
+#PACF cuts after lag 6 ,Acf has exp decay --> try AR(6)
+
+# Can argue both ACF & PACF decay exponentially --> try ARMA(p,q) starting with
+#  p=1,q=1 and proceed from there
+
+```
+Looking at the acf, we can argue that there is exponential decay, and hence the data is stationary. Since our data is stationary, we will now look at the acf and pacf to identify models to be tentatively entertained:
+ 
+* we can see the acf cuts off at lag 6 and in the pacf it looks like we have exponential decay
+    + We can try MA(6). (Or equivalently ARIMA(0,0,6)) OR
+* we can argue there is exponential decay in the acf and the pacf cuts off after lag 6 
+    + We can try AR(6). (Or equivalently, ARIMA(6,0,0)) OR
+* we can argue that we have exponential decay in both acf and pacf
+    + We can start trying ARMA(p=1,q=1) and try different combinations of p and q. (Or equivalently, start with ARIMA(1,0,1) and do trial and error for p and q).
+    
+After we identified these potential models, we used the $\texttt{sarima}$ function in r to perform parameter estimation and we also used this same function to perform model diagnostics for each of the potential models proposed above.
+
+Of the models which passed model diagnostics, below summarizes their prediction quality. Since we care more about prediction power, we decided to chose the model based on prediction power (look for lowest APSE.)
+
+Note that the process to obtain our predictions for Goals/Regular Season Game under this method was to use Box-Jenkins method on the residuals from regression to forecast the residuals for the test set. We then added these predicted residuals for the test-set to the projected G/RSG for the test-set from our regression model. Next, we calculated the APSE for these predicted values against the actual values in our test-set.
+```{r,include=FALSE}
+fit11 <- sarima(residuals.reg, p=0,d=0,q=6,P=0,D=0,Q=0,S=0) # Looks good
+fit12 <- sarima(residuals.reg, p=6,d=0,q=0,P=0,D=0,Q=0,S=0) # Lung-Box is sus --> fail
+fit13 <- sarima(residuals.reg, p=1,d=0,q=1,P=0,D=0,Q=0,S=0) # Bad -> drop
+# (p,q) between (1,1) and (3,3) did not look good (failed Ljung-Box)
+fit14 <- sarima(residuals.reg, p=4,d=0,q=3,P=0,D=0,Q=0,S=0) # Looks good
+fit15 <- sarima(residuals.reg, p=3,d=0,q=4,P=0,D=0,Q=0,S=0) # fail
+fit16 <- sarima(residuals.reg, p=4,d=0,q=4,P=0,D=0,Q=0,S=0) # good
+fit17 <- sarima(residuals.reg, p=5,d=0,q=4,P=0,D=0,Q=0,S=0) #good
+fit18 <- sarima(residuals.reg, p=4,d=0,q=5,P=0,D=0,Q=0,S=0) #good
+fit19 <- sarima(residuals.reg, p=6,d=0,q=5,P=0,D=0,Q=0,S=0) # fail
+fit20 <- sarima(residuals.reg, p=5,d=0,q=6,P=0,D=0,Q=0,S=0) #fail
+fit21 <- sarima(residuals.reg, p=5,d=0,q=5,P=0,D=0,Q=0,S=0) # good
+fit22 <- sarima(residuals.reg, p=6,d=0,q=6,P=0,D=0,Q=0,S=0) #good
+# Started with (p=1,q=1), trying different combinations
+
+
+#Compare the quality of fit of remaining models:
+fit11$ICs 
+fit14$ICs 
+fit16$ICs
+fit17$ICs
+fit18$ICs
+fit21$ICs
+fit22$ICs
+
+# Overall, there are some differences in fit, but we care more about prediction power
+#   --> look at APSE
+
+# Forecast test data
+fore1.reg <- sarima.for(residuals.reg, n.ahead=22, p=0,d=0,q=6,P=0,D=0,Q=0,S=0)
+title("ARIMA(0,0,6) Using Regression Residuals")
+lines(orig.test.data,col='blue',type='b',pch=16)
+
+fore2.reg <- sarima.for(residuals.reg, n.ahead=22, p=4,d=0,q=3,P=0,D=0,Q=0,S=0)
+title("ARIMA(4,0,3) Using Regression Residuals")
+lines(orig.test.data,col='blue',type='b',pch=16)
+
+fore3.reg <- sarima.for(residuals.reg, n.ahead=22, p=4,d=0,q=4,P=0,D=0,Q=0,S=0)
+title("ARIMA(4,0,4) Using Regression Residuals")
+lines(orig.test.data,col='blue',type='b',pch=16)
+
+fore4.reg <- sarima.for(residuals.reg, n.ahead=22, p=5,d=0,q=4,P=0,D=0,Q=0,S=0)
+title("ARIMA(5,0,4) Using Regression Residuals")
+lines(orig.test.data,col='blue',type='b',pch=16)
+
+fore5.reg <- sarima.for(residuals.reg, n.ahead=22, p=4,d=0,q=5,P=0,D=0,Q=0,S=0)
+title("ARIMA(4,0,5) Using Regression Residuals")
+lines(orig.test.data,col='blue',type='b',pch=16)
+
+fore6.reg <- sarima.for(residuals.reg, n.ahead=22, p=5,d=0,q=5,P=0,D=0,Q=0,S=0)
+title("ARIMA(5,0,5) Using Regression Residuals")
+lines(orig.test.data,col='blue',type='b',pch=16)
+
+fore7.reg <- sarima.for(residuals.reg, n.ahead=22, p=6,d=0,q=6,P=0,D=0,Q=0,S=0)
+title("ARIMA(6,0,6) Using Regression Residuals")
+lines(orig.test.data,col='blue',type='b',pch=16)
+
+forecasted.reg.models = list(fore1.reg, fore2.reg, fore3.reg, fore4.reg, fore5.reg,
+                             fore6.reg, fore7.reg)
+
+fore.reg.APSE = c()
+
+# Calculate APSE for each model above
+for (fore.model in forecasted.reg.models){
+  # Add predicted residuals to predicted regression trend
+  pred.vals = predicted.reg.test + fore.model$pred
+  m.APSE = mean((raw.test.data - pred.vals)^2)
+  fore.reg.APSE = c(fore.reg.APSE, m.APSE)
+}
+
+reg.arima.APSE = data.frame(model = NA, APSE = NA)
+reg.models = c("MA(6)", "ARMA(4,3)", "ARMA(4,4)", "ARMA(5,4)",
+               "ARMA(4,5)", "ARMA(5,5)", "ARMA(6,6)")
+
+
+for (i in (1:7)){
+  reg.arima.APSE[i,] = c(reg.models[i], round(fore.reg.APSE[i],8))
+}
+
+# Compare APSE from data & differenced data to regression residuals
+# APSE from Box-Jenkins on data & differenced data
+print(arima.APSE)
+#Sort by order of APSE so it's easier to compare
+sort.arima.APSE = arima.APSE[order(arima.APSE$APSE),]
+
+sort.reg.arima.APSE = reg.arima.APSE[order(reg.arima.APSE$APSE),]
+```
+
+The following APSE values/models are based on the regression residuals:
+
+```{r,include=FALSE}
+
+# APSE for Box-Jenkins on regression residuals
+print(sort.reg.arima.APSE)
+
+# Fit 2 models with lowest APSE to entire dataset 
+#  ARIMA(1,0,1) on data, 
+# 
+```
+
+| Model |  APSE |
+|--- | --- |
+| ARMA(5,5) | 0.00466861 | 
+| MA(6) | 0.00477928 | 
+| ARMA(5,4) | 0.00482906 |
+| ARMA(6,6) | 0.00485128 | 
+| ARMA(4,5) | 0.00518014 | 
+| ARMA(4,3) | 0.00519523 |
+| ARMA(4,4) | 0.00559514 |
+| MA(7) | 0.00913348 |
+
+As we can see, the APSE values for this Regression + Box-Jenkins on residuals approach are lower than simply using Box-Jenkins on our data set. The best model is using Regression + ARMA(5,5) on the residuals since it has the lowest APSE, that is it has the best prediction power.
+
+We will now fit our model that we identified as having the best prediction power to the residuals of our entire dataset and then make predictions with it. That is, we will fit the ARMA(5,5) model to our residuals from our optimal regession model. If the model passes diagnostics, we will combine our predicted residuals to our predicted trend to get our final prediction.
+
+
+```{r,include=FALSE,fig.align='center'}
+#Forecasting the future 5 years. Notice that we are using the whole dataset this time.
+
+# Forecast rend using optimal regression model
+forecast.time <- 2025:2029 
+
+poly.forecast.time <- predict(poly.t, newdata=as.numeric(forecast.time)) 
+
+fitted.values <- predict(optimal.regression.model, newx=as.matrix(poly.t[,1:optimal.degree]),s="lambda.min") 
+
+forecast.values <- predict(optimal.regression.model, newx=as.matrix(poly.forecast.time[,1:optimal.degree]),s="lambda.min") 
+forecast.values <- (-forecast.values)^(1/optimal.lambda)
+
+combined.values <- ts(c(fitted.values, forecast.values), start=1918,end=2029, frequency=1) 
+
+combined.values <- (-combined.values)^(1/optimal.lambda) # fitted & predicted values (orig scale)
+
+#Forecast residuals
+future.residuals <- sarima.for(reg.residuals.all, n.ahead=5, 
+                              p=5,d=0,q=5,P=0,D=0,Q=0,S=0)
+```
+
+```{r, echo=FALSE,results='hide'}
+Final.residuals <- sarima(reg.residuals.all,p=5,d=0,q=5,P=0,D=0,Q=0,S=0)
+# Add projected trend (from regression) + projected residuals
+Final.projected.values = forecast.values + future.residuals$pred
+
+```
+From the above output, we can see that the residuals from our ARIMA model pass the required tests: there is no trend/fanning shape in our standardized residuals, there is no slow decay in the ACF of Residuals, the residuals look normally distributed based on the Q-Qplot, and we have all p-values for the Ljung-Box statistic above the 5% threshold.
+
+Hence, this model seems OK and we can proceed with predicting. We will predict 5 years into the future (2025-2029.)
+
+```{r, echo=FALSE,results='hide',fig.align='center'}
+
+#Note this Pred interval is only for the residuals 
+# (we do not know how to get prediction interval from Ridge Regression)
+lower <- future.residuals$pred-1.96*future.residuals$se + forecast.values
+upper <- future.residuals$pred+1.96*future.residuals$se +forecast.values
+
+yband <- c(0.35,2.2)
+plot(data.ts,xlim=c(1915,2030),ylim=yband,
+        ylab='G/RSG',main='Predicting Using Regression + ARMA(5,5) on Residuals',col = "black")
+#lines(window(Final.projected.values, start=1918, end=2024), col= "firebrick2")
+lines(Final.projected.values, col="firebrick2", type='b', pch=16,cex=0.5)
+
+x = c(time(upper) , rev(time(upper)))
+y = c(upper , rev(lower))
+polygon(x, y, col = "grey" , border =NA)
+
+#lines(fit,col='red',type='b',pch=16 , cex=0.5) 
+lines(lower,col='black',lty=2)
+lines(upper,col='black',lty=2)
+lines(Final.projected.values, col="firebrick2", type='b', pch=16,cex=0.5)
+
+``` 
+Our final model uses a regression + ARIMA on residuals approach where we use regression to both predict and remove the trend and then we use ARIMA to predict the residuals.As previous stated, our optimal regression model was ridge regression model with lambda = 5 to predict the trend, and uses ARMA(5,5) to predict the residuals.
+
+Note that we were unable to calculate a prediction interval for our prediction of the trend from the ridge regression model, so the prediction interval shown is only the prediction interval from the predicted residuals.
+
+Note that this prediction interval is only for the predicted residuals of the ridge regression model- we were unable to calculate a prediction interval for the predicted trend of the ridge regression model due to the biased estimates.
+
+# Conclusions
+
+Our model's predictions indicate that the G/RSG will increase in the next 5 years. The point prediction for next year, 2025, is 0.8645 Goals/Regular Season Game (G/RSG) for the leading scorer with a 95% prediction interval (from the reisduals) of approximately $\pm 0.21$ G/RSG. Since there will be 82 regular season games next year, this suggests that our model expects that $0.8645$ G/RSG $\times$ 82 RSG = 70.89 = 71 goals are needed to be the leading scorer, with a 95% prediction interval of $\pm$ 17.2 goals. 
+The 95% prediction interval is quite large so these point predictions on their own may not be very helpful.

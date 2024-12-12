@@ -1,0 +1,204 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
+```{r}
+set.seed(12)
+```
+### Q1 a)
+```{r}
+d <- 20
+r <- 20000
+s <- 5
+n <- r * s
+
+k <- d^s
+
+nums <- runif(n)
+
+matrix <- matrix(nums, ncol=s, byrow = TRUE)
+
+N <- numeric(k)
+
+for (i in 1:r) {
+  box <- sum((floor(matrix[i, ] * d)) * d^(0:(s-1))) + 1
+  N[box] <- N[box] + 1
+}
+
+expected_count <- r / k
+
+x_sqr <- sum((N - expected_count)^2 / expected_count)
+
+p = pchisq(x_sqr, df =k-1, lower.tail = FALSE)
+print(p)
+```
+p = 0.07 suggests that the value is uniform enough for our purposes and we
+should not reject the null hypothesis
+
+### Q1b)
+```{r}
+d <- 5
+r <- 10000
+s <- 5
+n <- r * s
+
+k <- d^s
+x <- 1
+randu = function() {
+  x <<- ((2^16 + 3) * x) %% (2^31)
+  x/(2^31)
+}
+nums <- numeric(n)
+
+for (i in 1:n) {
+  nums[i] <- randu()
+}
+
+matrix <- matrix(nums, ncol=s, byrow = TRUE)
+
+N <- numeric(k)
+
+for (i in 1:r) {
+  box <- sum((floor(matrix[i, ] * d)) * d^(0:(s-1))) + 1
+  N[box] <- N[box] + 1
+}
+
+expected_count <- r / k
+
+x_sqr <- sum((N - expected_count)^2 / expected_count)
+
+p = pchisq(x_sqr, df =k-1, lower.tail = FALSE)
+print(p)
+```
+Since our p value is 0.0049, it is way too small, and thus, the sample is
+likely too uniform. Thus, we reject the null hypothesis using d=20, s=5 and
+r=20000.
+
+\newpage
+
+### Q2
+```{r}
+Z <- 7811
+
+nums <- numeric(6)
+for (i in 1:6) {
+  Z <<- Z^2
+  Z <<- sprintf("%08d", Z)
+  Z <- as.integer(substr(Z, 3, 6))
+  nums[i] <- Z / 10000
+}
+print(nums)
+```
+
+\newpage
+
+### Q3a)
+We know that $f(k) \geq 0$, so, we have $c6^{-k} \geq 0$. We also know $\sum_{k=1}^{\infty} c6^{-k} = 1$. With this, we have:
+
+\(
+\frac{c}{1-\frac{1}{6}} = 1 \\
+c = \frac{5}{6}
+\)
+
+### Q3b)
+Using the inversion method, we first need to find F:
+
+\(
+F(x) = P(W <= x) = \sum_{k \leq x}P(W = k)
+F(x) = \sum_{k\leq x}\frac{5}{6}6^{-k} \\
+F(x) = \frac{5}{6} \cdot \frac{1 - \big(\frac{1}{6}\big)^{x + 1}}{1 - \frac{1}{6}} = 1 - \Big(\frac{1}{6}\Big)^{x + 1} \\
+F^\leftarrow(y) = inf\{x\in\mathbb{R}:\; F(x)\geq y\},\;y\in[0,1] \\
+\Big(\frac{1}{6}\Big)^{x + 1} \leq y + 1 \\
+(x+1)log\Big(\frac{1}{6}\Big)\leq log(y + 1) \\
+x\leq \frac{log(y+1)}{log\big(\frac{1}{6}\big)} - 1 \\
+F^\leftarrow(y) = \frac{log(y+1)}{log\big(\frac{1}{6}\big)} - 1
+\)
+
+```{R}
+nums <- runif(n)
+
+quantile_F <- function(y) {
+    return (log(y + 1) / log(1/6) - 1)
+}
+
+ans <- sapply(nums, quantile_F)
+```
+
+\newpage
+
+### Q4a)
+
+\(
+F_X(z) = \mathbb{P}(Z\leq z\;|\;Z\in[a,b]) = \frac{\mathbb{P}(Z\leq z,\;Z\in[a,b])}{\mathbb{P}(Z\in[a,b])} \\
+= \frac{\mathbb{P}(Z\in[a,z])}{\mathbb{P}(X\in[a,b])} \\
+= \frac{F(z) - F(a)}{F(b) - F(a)}
+\)
+
+This is the probability of one sample from Z being in X. The probability of n samples is
+\(
+n\cdot\frac{F(z) - F(a)}{F(b) - F(a)}
+\)
+
+### Q4b)
+We can express the CDF of $Z|Z\in[a,b]$ in terms of the CDF F of Z and since the
+CDF of a standard normal distribution is continuous and strictly increasing:
+
+\(
+F_{Z|Z\in[a,b]} = \frac{F(z) - F(a)}{F(b) - F(a)} \\
+F_{Z|Z\in[a,b]}^{-1}(x) = F^{-1}(F(a) + (F(b) - F(a))x)
+\)
+
+By the inversion method we can sample n realizations from $Z\;|\;Z\in[a,b]$ as follows:
+
+a) Sample $U_1,\dots,U_n\overset{ind.}{\sim} U(0,1)$.
+
+b) Return $X_j = F^{-1}(F(a) + (F(b) - F(a))x)$ for $j = 1,\dots,n$
+
+### Q4c)
+```{r}
+n <- 10^7
+algo1 <- function(a, b) {
+  count <- 0
+  while(count < n) {
+    num <- rnorm(1)
+    if (num >= a && num <= b) {
+      count <- count + 1
+    }
+  }
+}
+
+#i)
+start_time <- Sys.time()
+algo1(-0.3, 0.3)
+end_time <- Sys.time()
+print(end_time - start_time)
+
+#ii)
+start_time <- Sys.time()
+algo1(-0.9, 0.5)
+end_time <- Sys.time()
+print(end_time - start_time)
+
+inverse_f <- function(x, a, b) {
+  return (qnorm(pnorm(a) + (pnorm(b) - pnorm(a))*x))
+}
+algo2 <- function(a, b) {
+  u <- runif(n)
+  return (sapply(u, inverse_f,a=a, b=b))
+}
+
+start_time <- Sys.time()
+nums <- algo2(-0.3, 0.3)
+end_time <- Sys.time()
+print(end_time - start_time)
+
+start_time <- Sys.time()
+nums <- algo2(-0.9, 0.5)
+end_time <- Sys.time()
+print(end_time - start_time)
+```
+
+Comparing the CPU times, we can see that for a small range of a and b, the
+inverse method is much faster, but for a large range, random sampling is also
+a viable method.

@@ -1,0 +1,218 @@
+---
+title: "STAT 430: Assignment 1"
+subtitle: 'DUE: Friday, Sept 24, 2024 by 5:00pm EDT'
+output:
+pdf_document: default
+word_document: default
+html_document: default
+urlcolor: blue
+---
+
+# Q1
+
+```{r}
+data <- read.table("prostate.txt", head=T)
+
+y <- data[,9]
+x1 <- data[,1]
+x2 <- data[,2]
+x3 <- data[,3]
+x4 <- data[,4]
+x5 <- data[,5]
+x6 <- data[,6]
+x7 <- data[,7]
+x8 <- data[,8]
+
+fit <- lm(y ~ x1+x2+x3+x4+x5+x6+x7+x8)
+summary(fit)
+```
+
+## a)
+
+| Term | Coefficient | SE(estimate) | $t$-statistic | p-value of $t$-statistic |
+| --- | --- | --- | --- | --- |
+| Intercept   | 5.581e-16 | 6.153e-02 |  0.000 | 1.00000    
+| lcavol          | 5.762e-01 | 8.968e-02 |  6.425 | 6.55e-09
+| lweight          | 2.309e-01 | 7.456e-02 |  3.096 | 0.00263
+| age          | -1.370e-01 | 7.149e-02 | -1.917 | 0.05848
+| lbph          | 1.216e-01 | 7.279e-02 |  1.670 | 0.09848
+| svi          | 2.732e-01 | 8.650e-02 |  3.158 | 0.00218
+| lcp          | -1.285e-01 | 1.089e-01 | -1.180 | 0.24115    
+| gleason          | 3.080e-02 | 9.718e-02 |  0.317 | 0.75207    
+| pgg45          | 1.089e-01 | 1.067e-01 |  1.021 | 0.31000
+
+## b)
+
+We can use partial f-test to test
+$H_0: x1 = x2 = x3 = x4 = x5 = x6 = x7 = x8 = 0$
+Taking a look at the summary of our fit, we can see the p-value
+of our F-statistic is very small (< 2.2e-16). Thus, we reject
+our null hypothesis.
+
+## c)
+
+```{r}
+fit2 <- lm(y ~ I(x1 + x2)+x3+x4+x5+x6+x7+x8)
+anova(fit, fit2)
+```
+From this ANOVA, we can see that the Pr(>F) < 0.05, so we reject the
+null hypothesis. This means that most likely the first two covariates
+are uncorrelated.
+
+## d)
+
+$H_0: x3=x4=x6=x7=x8=0$
+
+```{r}
+fit3 <- lm(y ~ x1+x2+x5)
+anova(fit, fit3)
+```
+From this ANOVA, we can see Pr(>F) > 0.05, so we do not reject
+the null hypothesis. This means that these covariates are most
+likely uncorrelated with lpsa.
+
+\newpage
+
+# Q2
+
+## a)
+
+$$
+t = \frac{\hat\beta_1}{\sqrt{\hat\sigma^2(X^TX)^{-1}_{22}}} \\
+t = \frac{12}{\sqrt{2 * 0.5}} \\
+t = 12
+$$
+```{r}
+pt(12, df=14, lower.tail=FALSE)
+```
+
+Since our p-value << 0.05, we reject the null hypothesis, and assume
+it is likely that $\beta_1$ is an important covariate.
+
+## b)
+
+$$
+t = \frac{\hat\beta_1 - \hat{\beta_2}}{\sqrt{\sigma^2 * ((X^TX)^{-1}_{22} + (X^TX)^{-1}_{33} - 2 * (X^TX)^{-1}_{23})}} \\
+t = \frac{12 - 15}{\sqrt{2 * (0.5 + 2 + 0.5)}} \\
+t = \frac{-3}{\sqrt{6}}
+$$
+```{r}
+2 * pt(-3/sqrt(6), df=13)
+```
+Since p >> 0.05 we do not reject the null hypothesis and there
+is not enough evidence to suggest that they are not statistically equal.
+
+## c)
+
+$$
+t = \frac{2\hat\beta_1 - \hat\beta_0 - \hat{\beta_2}}{\sqrt{\hat\sigma^2 \times (4 (X^TX)^{-1}_{22}+(X^TX)^{-1}_{11} + (X^TX)^{-1}_{33} -4(X^TX)^{-1}_{21} - 4(X^TX)^{-1}_{23} + 2(X^TX)^{-1}_{13})}} \\
+t = \frac{24 - 10 - 15}{2\times(2+1+2-1-1+0.5)} \\
+t = -\frac{1}{7}
+$$
+```{r}
+2 * pt(-1/7, df=12)
+```
+
+Since p >> 0.05, we do not reject the null hypothesis. It is likely that $2\beta_1=\beta_0+\beta_2$.
+
+\newpage
+
+# Q3
+
+## a)
+
+We know that each $\hat{\beta_j}\sim N(\beta_j, (X^TX)^{-1}_{jj})$.
+Thus, 
+$$
+\hat{\beta_j}-\beta_j\sim N(0, \sigma^2(X^TX)^{-1}_{jj}) \\
+\frac{\hat{\beta_j}-\beta_j}{\sqrt{\sigma^2(X^TX)^{-1}_{jj}}}\sim N(0,1)=Z
+$$
+However, since we don't have $\sigma^2$, we have to estimate it
+using MSE.
+
+$$
+\sqrt{\hat\sigma^2}
+=\sqrt{MSE}
+=\sqrt{\frac{RSS}{N-1-p}}
+\sim\sqrt{\frac{\chi^2_{N-1-p}}{N-1-p}}
+$$
+Thus, we have
+
+$$
+\frac{\hat{\beta_j}-\beta_j}{\sqrt{\hat\sigma^2}(X^TX)^{-1}_{jj}}\sim\frac{Z}{\sqrt{\frac{\chi^2_{N-1-p}}{N-1-p}}}= t_{N-1-p}
+$$
+
+## b)
+
+Similar to part a), we have
+$$
+a^T\hat{\beta_j}\sim N(a^T\beta_j, \sigma^2a^T(X^TX)^{-1}_{jj}a)
+$$
+
+Normalizing this gives us,
+$$
+\frac{a^T\hat{\beta_j} - a^T\beta}{\sqrt{\sigma^2a^T(X^TX)^{-1}_{jj}}}\sim N(0,1)=Z
+$$
+
+Once again, we have to estimate $\sigma^2$ using the MSE, which follows
+a $\sqrt{\frac{\chi^2_{N-1-p}}{N-1-p}}$ distribution.
+
+Thus, we have
+
+$$
+\frac{\hat{a^T\beta_j}-a^T\beta_j}{\sqrt{\hat\sigma^2a^T(X^TX)^{-1}_{jj}a}}\sim\frac{Z}{\sqrt{\frac{\chi^2_{N-1-p}}{N-1-p}}}= t_{N-1-p}
+$$
+
+\newpage
+
+# Q4
+
+## a)
+
+$$
+\begin{align}
+& \sum_{i=1}^Nr_i \\
+= & \sum_{i=1}^Ny_i-\hat{y_i} \\
+= & \sum_{i=1}^Ny_i - \hat\beta_0 - \hat\beta_1x_i \\
+= & \sum_{i=1}^Ny_i - N\hat\beta_0 - \hat\beta_1\sum_{i=1}^Nx_i \\
+= & N\bar{y} - N\hat\beta_0 - N\hat\beta_1\bar{x} \\
+= & N\bar{y} - N(\bar{y} - \hat\beta_1\bar{x}) - N\hat\beta_1\bar{x} & \text{sub in LSE formula} \\
+= & 0
+\end{align}
+$$
+
+since $\sum_{i=1}^Nr_i=0$, then $\sum_{i=1}^N(y_i - \hat{y_i})=0\implies\sum_{i=1}^Ny_i=\sum_{i=1}^N\hat{y_i}$
+
+## b)
+One of the LSE properties requires residuals to be orthogonal to the
+fitted values.
+
+$$
+\frac{\partial}{\partial\hat\beta_1}=\sum_{i=1}^N(y_i-\hat\beta_0-\hat\beta_1x_i)x_i=0\\
+\implies\sum_{i=1}^Nr_ix_i=0
+$$
+
+$$
+\begin{align}
+& \sum_{i=1}^Nr_i\hat{y}_i \\
+= & \sum_{i=1}^Nr_i(\hat\beta_0-\hat\beta_1x_i) \\
+= & \hat\beta_0\sum_{i=1}^Nr_i - \hat\beta_1\sum_{i=1}^Nr_ix_i \\
+= & 0
+\end{align}
+$$
+which follows from a) and the previous result.
+
+## c)
+
+$$
+\begin{align}
+& \sum_{i=1}^N(y_i-\bar y)^2 \\
+= & \sum_{i=1}^N(y_i-\hat y_i + \hat y_i - \bar y)^2 \\
+= & \sum_{i=1}^N(y_i-\hat y_i)^2+\sum_{i=1}^N(\hat y_i-\bar y_i)^2 + 2\sum_{i=1}^N(y_i - \hat y_i)(\hat y_i - \bar y) \\
+= & \sum_{i=1}^N(y_i-\hat y_i)^2+\sum_{i=1}^N(\hat y_i-\bar y_i)^2 + 2\sum_{i=1}^Nr_i(\hat y_i - \bar y) \\
+= & \sum_{i=1}^N(y_i-\hat y_i)^2+\sum_{i=1}^N(\hat y_i-\bar y_i)^2 + 2\sum_{i=1}^Nr_i\hat y_i - 2\bar y\sum_{i=1}^Nr_i \\
+= & \sum_{i=1}^N(\hat y_i - \bar y)^2 + \sum_{i=1}^N(y_i - \hat y_i)^3 \\
+= & \sum_{i=1}^N(\hat y_i-\bar y)^2 + \sum_{i=1}^Nr_i^2 \\
+= & RHS
+\end{align}
+$$

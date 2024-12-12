@@ -1,0 +1,35 @@
+---
+title: "STAT 430 A2"
+author: "Mark Lin"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r}
+data <- read.table("muzzle.txt")
+data <- data[-1,]
+x <- as.numeric(data$V1)
+P1 <- (x - 0.030)/0.014
+P2 <- 3*((x - 0.030)/0.014)^2 - 2
+
+fit <- lm(data$V2 ~ P1 + P2, data=data)
+summary(fit)
+```
+
+Notice that our P-value for P2 \> 0.05, our significance threshold. Thus, we do not reject our hypothesis, $H_0: \hat\beta_2=0$ because we do not have enough statistical evidence against.
+
+\newpage
+
+```{r}
+x <- c(7.7, 6.3, 8.6, 8.0, 7.3, 7.2, 13.0, 13.3, 10.7)
+y <- c(791.7, 610.0, 710.0, 731.0, 710.0, 604.7, 983.3, 958.8, 747.8)
+type <- factor(c("Canna", "Canna", "Canna", "Corn", "Corn", "Corn", "Potato", "Potato","Potato"))
+
+data <- data.frame(x, y, type)
+null <- lm(y ~ x, data=data)
+full <- lm(y ~ x + type, data=data)
+
+anova(null, full)
+```
+
+Since our $p>0.05$, we do not have sufficent statistical evidence to reject the null hypothesis $H_0:\tau_1=\tau_2=\tau_3=0$.

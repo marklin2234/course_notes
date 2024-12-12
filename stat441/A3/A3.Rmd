@@ -1,0 +1,110 @@
+---
+title: "STAT 441 A3"
+author: "Mark Lin"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+# Q6.2
+
+## a)
+
+```{r}
+IDF <- log(10/4)
+TF <- 1 + log(3)
+
+TFIDF <- TF * IDF
+TFIDF
+```
+
+## b)
+
+```{r}
+IDF <- log(10/3)
+TF <- 0
+TFIDF <- TF * IDF
+TFIDF
+```
+
+## c)
+
+```{r}
+IDF <- log(10/9)
+TF <- 1 + log(1)
+TFIDF <- TF * IDF
+TFIDF
+```
+
+\newpage
+
+# Q8.1
+
+A 1 in 7, or 14.2% survival rate hardly justifies the term unsinkable.
+Moreover, "Quantguy" assumes independence between being an adult, first-class and a women, but they are likely highly correlated on the Titanic, considering it was a ship for the wealthy at the time.
+
+\newpage
+
+# 7.7
+
+## a)
+
+```{r}
+set.seed(123)
+
+generate_mixture_data <- function(n, y) {
+  means <- runif(10, 0, 1)
+  data <- data.frame(x1 = numeric(n), x2 = numeric(n), y = y)
+  for (i in 1:n) {
+    component <- sample(1:10, 1)
+    data$x1[i] <- rnorm(1, means[component], 0.01)
+    component <- sample(1:10, 1)
+    data$x2[i] <- rnorm(1, means[component], 0.01)
+  }
+  return(data)
+}
+
+y0 <- generate_mixture_data(500, 0)
+y1 <- generate_mixture_data(500, 1)
+data <- rbind(y0, y1)
+
+generate_noise_data <- function() {
+  noise <- runif(100, 0, 1)
+  data <- c()
+  for (i in 1:1000) {
+    s <- sample(1:100, 1)
+    data[i] <- noise[s]
+  }
+  return(data)
+}
+
+data$noise <- generate_noise_data()
+
+train_indices <- sample(1:nrow(data), nrow(data)/2)
+train_data <- data[train_indices, ]
+test_data <- data[-train_indices, ]
+
+library(ggplot2)
+library(dplyr)
+
+ggplot(data, aes(x = x1, y = x1, color = factor(y))) +
+  geom_point(alpha = 0.6) +
+  labs(title = "Scatter Plot of x1 vs x1", x = "x1", y = "x1") +
+  scale_color_manual(values = c("blue", "red"), labels = c("y = 0", "y = 1")) +
+  theme_minimal()
+
+ggplot(data, aes(x=noise, y=noise, color=factor(y))) +
+  geom_point(alpha=0.6) +
+  labs(title="Scatter Plot of noise data", x="x1", y="x1") +
+  scale_color_manual(values=c("blue", "red"), labels=c("y=0","y=1")) +
+  theme_minimal()
+
+noise_means <- mean(data$noise)
+
+ggplot(data.frame(noise_means), aes(x = noise_means)) +
+  geom_histogram(binwidth = 0.05, fill = "skyblue", color = "black") +
+  labs(title = "Histogram of the Means of the Noise Variables", x = "Mean", y = "Count") +
+  theme_minimal()
+```
+
+## b)
+

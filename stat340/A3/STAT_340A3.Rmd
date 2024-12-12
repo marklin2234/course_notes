@@ -1,0 +1,332 @@
+---
+title: "STAT_340A3"
+author: "Mark Lin, Ryan Ma"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Q1
+```{r}
+set.seed(123)
+```
+## a)
+PSEUDO CODE:
+
+> Initialize:
+
+> lambda_s, lambda_a, T, t, arrivals and service
+
+> while t <= T:
+
+> > sample a and s
+    arrivals.add(a)  
+    service.add(s)  
+    increment t = t + a
+
+> intialize departures
+> for (j in length(arrivals)):
+
+> > departures.add(max(prev_depart + service[j], arrivals[j] + service[j]))  
+prev_depart <- departures[j]
+
+> for (j in length(departures))
+
+> > if departures[j] > T:
+
+> > > return length(departures) - j
+
+## b)
+
+```{r}
+lambda_a <- 11
+lambda_s <- 10
+n <- 10
+T = 10
+
+N <- c(100, 1000, 10000)
+
+for (l in  1:length(N)) {
+  n <- N[l]
+  observed <- c()
+  while(n > 0) {
+    arrivals <- c()
+    service <- c()
+    t <- 0
+    n <- n - 1
+    while(t <= T) {
+      u <- runif(1)
+      a <- -log(u)/lambda_a
+      v <- runif(1)
+      s <- -log(v)/lambda_s
+      t <- t + a
+      if (t <= T) {
+        arrivals <- c(arrivals, t)
+        service <- c(service, s)
+      }
+    }
+    
+    departures <- c()
+    prev_depart <- 0
+    for (j in 1:length(service)) {
+      departures <- c(departures, max(prev_depart + service[j], arrivals[j] + service[j]))
+      prev_depart <- departures[j]
+    }
+    
+    for (j in 1:length(departures)) {
+      if (departures[j] > T) {
+        numCustomers <- length(departures) - j
+        break
+      }
+    }
+    observed <<- c(observed, numCustomers)
+  }
+  mc_estimate <- sum(observed)/length(observed)
+  S_n = sqrt((1/(length(observed) - 1))*(sum((observed - mc_estimate)^2)))
+  se <- S_n/sqrt(length(observed))
+  print(paste0("95% CI: [", mc_estimate - 1.96*se, " ", mc_estimate + 1.96*se, "] for n = ", N[l]))
+}
+```
+
+\newpage
+
+# Q2
+
+## a)
+```{r}
+rm(list=ls())
+set.seed(123)
+n = 5000
+
+mu = c(3,4)
+sigma <- matrix(c(2,3,3,8), nrow = 2, ncol = 2)
+A <- t(chol(sigma))
+p <- c()
+for (i in 1:n) {
+  Z <- matrix(rnorm(2),nrow=2)
+  X <- mu + A%*%Z
+  p <- c(p, if(max(X[1], X[2]) <= 7) 1 else 0)
+}
+p_hat <- sum(p)/n
+S_n <- sqrt((1/(n - 1)) * sum((p - p_hat)^2))
+var <- S_n^2
+se <- S_n / sqrt(n)
+print(paste0("95% CI: [", p_hat - 1.96*se, " ", p_hat + 1.96*se, "]"))
+print(paste0("Estimated Variance: ", var))
+```
+
+## b)
+
+We can apply AV to this problem of estimating $p$ by using the pairs
+$X=(X_1,\ldots,X_d)$ and $\tilde X=(-X_1,\ldots,-X_d)$. Then we can
+do as above with $X,\;\tilde X,\;p,\;\tilde p$ and set
+$p=(p + \tilde p) / 2$ As stated in the course notes, AV is only
+guaranteed to work if $Cor(p, \tilde p) < 0$.
+
+## c)
+
+```{r}
+set.seed(123)
+n <- 2500
+p <- c()
+p_tilde <- c()
+for (i in 1:n) {
+  Z <- matrix(rnorm(2),nrow=2)
+  X <- mu + A%*%Z
+  X_tilde <- -X
+  a <- if (max(X[1], X[2]) <= 7) 1 else 0
+  b <- if (min(X_tilde[1], X_tilde[2]) >= -7) 1 else 0
+  p <- c(p, (a + b) / 2)
+}
+p_hat <- sum(p) / n
+S_n <- sqrt((1/(n - 1)) * sum((p - p_hat)^2))
+var <- S_n^2/2
+se <- S_n/sqrt(n)
+print(paste0("95% CI: [", p_hat - 1.96*se, " ", p_hat + 1.96*se, "]"))
+print(paste0("Estimated Variance: ", var))
+```
+Yes, the AV estimator has a slightly smaller estimated variance than my
+MC estimator.
+
+## d)
+
+```{r}
+B <- 500
+thetas <- c()
+for (b in 1:B) {
+  sam <- sample(p,n,replace=TRUE)
+  # Now we need to construct an estimate of the median
+  theta <- sort(sam)
+  thetas <- c(theta, (theta[n / 2 - 1] + theta[n / 2]) / 2)
+}
+
+print(median(thetas))
+```
+
+\newpage
+
+# Q3
+
+## a)
+
+We know that for MC estimators, if $\sigma^2 = \text{Var}(g(X))<\infty$
+then $\text{Var}(\hat\mu^{MC}_n)=\frac{\sigma^2}{n}$. Thus, we have:
+$$
+\text{Var}(\hat\mu^{MC}_n) = \text{Var}(\hat\mu^{MC}_{n,1} - \hat\mu^{MC}_{n,2})
+$$
+$$
+= \text{Var}(\hat\mu^{MC}_{n,1}) + \text{Var}(\hat\mu^{MC}_{n,2})
+$$
+$$
+=\frac{\sigma^2_1 + \sigma^2_2}{n}
+$$
+
+## b)
+
+$$
+\text{Var}(\hat\mu^{CRN}_n) = \text{Var}(\hat\mu^{CRN}_{n,1}) + \text{Var}(\hat\mu^{CRN}_{n,2})
+$$
+$$
+= \text{Var}(\hat\mu^{CRN}_{n,1}) + \text{Var}(\hat\mu^{CRN}_{n,2}) - 2\text{Cov}(\hat\mu^{CRN}_{n,1},\hat\mu^{CRN}_{n,2})
+$$
+$$
+= \frac{\sigma^2_1 + \sigma^2_2 - 2\rho\sigma_1\sigma_2}{n}
+$$
+Where $\rho = \text{Cor}(\hat\mu^{CRN}_{n,1}, \hat\mu^{CRN}_{n,2})$.
+
+## c)
+
+When the two variables $\mu_1$ and $\mu_2$ are negatively correlated
+the estimator constructed in b outperforms the one in a.
+
+## d)
+
+For independent samples:
+$$
+\hat\mu^{MC}_n=\hat p_{k,\sigma=0.2}-\hat p_{k,\sigma=0.3}
+$$
+$$
+=P_1(S_T > K) - P_2(S_T > K)
+$$
+$$
+=(1 - \varPhi_{\sigma=0.2}(S_T > K)) - (1 - \varPhi_{\sigma=0.3}(S_T>K))
+$$
+$$
+=(1 - \varPhi(\frac{\ln(110) - \mu}{0.2})) - (1 - \varPhi(\frac{\ln(110)-\mu}{0.3}))
+$$
+$$
+=(1 - \varPhi(\frac{\ln(110) - (\ln(100) + (0.05-0.2^2/2))}{0.2})) - (1-\varPhi(\frac{\ln(110) - (\ln(100) + 0.05 - 0.3^2/2)}{0.3}))
+$$
+$$
+=0.3720038-0.3816943=-0.0096905
+$$
+The standard deviation can be found using the following:
+$$
+\text{Var}(\hat p_1-\hat p_2)=\text{Var}(\hat p_1) + \text{Var}(\hat p_2)
+$$
+$$
+= 0.2^2 + 0.3^2=\frac{\sqrt{13}}{10}
+$$
+Thus, our standard error is $\text{SE}=\frac{\sigma}{\sqrt{10000}}=0.003605551$
+and our CI is $[-0.0096905 -1.96\times0.003605551, -0.0096905 + 1.96\times0.003605551]=[-0.01675738,-0.00262362]$
+
+\newpage
+
+# Q4
+
+## a)
+
+Since $t$ is uniformly distributed, we can instead sample $U\sim U(0, T)$.
+Thus, we have
+$$
+\mu=E\Bigg(e^{-rT}\max\Bigg\{0,\frac{1}{N}\sum_{j=1}^NS_{t_j}-K\Bigg\}\Bigg)
+$$
+Note that $\sum_{j=1}^NS_{t_j}=S_{t_0}^{(r-\sigma^2/2)t+\sigma W_t}+\dots+S_{t_n}^{(r-\sigma^2/2)t+\sigma W_t}$
+Thus, replacing $t$ with $U\sim U(0,T)$, we can represent $\mu$ with
+respect to the uniform distribution as the following:
+$$
+\mu = E\Bigg(e^{-rT}max\Bigg\{0,\frac{1}{N}\Big(S_{t_0}^{(r-\sigma^2/2)U+\sigma W_U}+\dots+S_{t_n}^{(r-\sigma^2/2)U+\sigma W_U}\Big)-K\Bigg\}\Bigg)
+$$
+
+## b)
+
+$\mu_g$ can be re-written to $e^{-rT}(e^{a+b/2}\Phi(d_1)-K\Phi(d_2)$ as expressed in the question when we replace the arithmetic averaging with geometric averaging. This makes it so that all the factors in $\mu_g$ are close form. We also have well known distributions such as exponential and standard normal that are defined explicitly. This makes it an ideal control variable as it is much easier to compute compared to the arithmetic mean which is not close form or explicitly defined. Furthermore, the geometric average is good for correlated data and as stock prices are related to previous days of stock prices (T) it means geometric average is a good control variable.
+
+## c)
+
+```{r}
+asian_call_MC <- function(n=100, S.0=100, K=110, r=0.01, sig=0.1, N=260, n.pilot=100, T=1) {
+  mc <- mu_MC(n, S.0, K, r, sig, N, T)
+  av <- mu_AV(n, S.0, K, r, sig, N, T)
+  cv <- mu_CV(n, S.0, K, r, sig, N, T, n.pilot)
+  print(paste0(mc, " ", av, " ", cv))
+}
+
+mu_MC <- function(n, S.0, K, r, sig, N, T) {
+  mu <- c()
+  for (i in 1:n) {
+    t <- runif(N, min=0, max=T)
+    W_t <- rnorm(N, mean=0, sd=t)
+    X_t <- (r - (sig^2)/2)*t+(sig*W_t)
+    S_t <- S.0*exp(X_t)
+    g <- exp(-r*T)*max(0, (1/N)*sum(S_t) - K)
+    mu <- c(mu, g)
+  }
+  return ((1/n)*sum(mu))
+}
+
+mu_AV <- function(n, S.0, K, r, sig, N, T) {
+  n <- n / 2
+  mu <- c()
+  mu_tilde <- c()
+  for (i in 1:n) {
+    t <- runif(N, min=0, T)
+    t_tilde <- 1 - t
+    W_t <- rnorm(N, mean=0, sd=t)
+    W_t_tilde <- rnorm(N, mean=0, sd=t_tilde)
+    X_t <- (r - sig^2/2)*t+(sig*W_t)
+    X_t_tilde <- (r - sig^2/2)*t_tilde+(sig*W_t_tilde)
+    S_t <- S.0*exp(X_t)
+    S_t_tilde <- S.0*exp(X_t_tilde)
+    g <- exp(-r*T)*max(0, (1/N)*sum(S_t) - K)
+    g_tilde <- exp(-r*T)*max(0, (1/N)*sum(S_t_tilde) - K)
+    mu <- c(mu, g)
+    mu_tilde <- c(mu_tilde, g_tilde)
+  }
+  return (1/n*sum((mu + mu_tilde)/2))
+}
+
+mu_CV <- function(n, S.0, K, r, sig, N, T, n.pilot) {
+  a = log(S.0) + (r - sig^2/2)*T*(N + 1)/(2*N)
+  b = sig^2*((T*(N+1)*(2*N+1))/(6*N^2))
+  d1 = (-log(K) + a + b)/sqrt(b)
+  d2 = d1 - sqrt(b)
+  
+  mu <- c()
+  for (i in 1:n) {
+    U <- runif(n.pilot)
+    c <- sqrt(U)
+    y <- rep(exp(a+b/2)*pnorm(d1)-K*pnorm(d2), n.pilot)
+    beta <- cov(y, c) / var(c)
+
+    U <- runif(n)
+    c <- sqrt(U)
+    y <- rep(exp(a+b/2)*pnorm(d1)-K*pnorm(d2), n)
+    mu <- c(mu, mean(y + beta*(2/3 - c)))
+  }
+  mean(mu)
+}
+
+asian_call_MC()
+```
+
+The output for both the MC and AV estimator is 0. This means that
+these simulation methods predict that the asian call will not be
+profitable. On the other hand, when using CV estimation, we predict
+that the option will be profitable.
+
+
+

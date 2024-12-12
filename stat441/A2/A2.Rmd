@@ -1,0 +1,52 @@
+---
+title: "STAT 441 Assignment 2"
+author: "Mark Lin"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Q5
+
+## a)
+
+```{r, warning=FALSE}
+library(glmnet)
+
+data <- read.csv("hunger_games.csv")
+
+X <- as.matrix(data[, c("female", "career", "has_name", "volunteer", "age")])
+Y <- data$surv_day1
+
+model <- glmnet(X, Y, alpha=1)
+cv_model <- cv.glmnet(X, Y, alpha=1)
+
+best_lambda <- cv_model$lambda.min
+
+plot(cv_model, main="Cross-validation Plot")
+plot(model, xvar="lambda", label=TRUE, main="Coefficients vs Lambda")
+
+selected_coef <- coef(cv_model, s="lambda.min")
+rownames(selected_coef)[which(selected_coef != 0)]
+```
+So this lasso model chooses the variables career, has_name and volunteer.
+
+## b)
+
+```{r}
+selected_coef
+```
+The penalized coefficient are provided above.
+
+## c)
+
+```{r}
+katniss <- as.numeric(unlist(data[data$name == "Katniss", c("female", "career", "has_name", "volunteer", "age")]))
+
+sum(selected_coef * c(1, katniss))
+```
+
+According to our model, Katniss will survive with a 97% chance.

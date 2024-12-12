@@ -1,0 +1,19 @@
+// Question 1: Static Cast
+float riverFlow = 3.75f;
+int solidGround = static_cast<int>(riverFlow);
+// Will solidGround correctly represent riverFlow?
+
+// Question 2: Dynamic Cast
+class Base { virtual void dummy() {} };
+class Derived : public Base { int a; };
+Base* basePtr = new Derived();
+Derived* derivedPtr = dynamic_cast<Derived*>(basePtr);
+// Is derivedPtr a valid pointer to Derived?
+
+// Question 3: Const Cast
+const int ancientNumber = 42;
+const int* ptrToAncient = &ancientNumber;
+int* modifiedPtr = const_cast<int*>(ptrToAncient);
+*modifiedPtr = 43;
+// Can ancientNumber be successfully modified?
+
