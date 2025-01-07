@@ -30,7 +30,7 @@ A *simulation model* is a model used for simulation.
 * deterministic (having no or negligible random elmenets underlying)
 * stochastic (based on random elements)
 
-**Focus*:* static, stochasitc simulations and models based on random variables and random vectors.
+**Focus*:* static, stochastic simulations and models based on random variables and random vectors.
 
 #### Advantages
 

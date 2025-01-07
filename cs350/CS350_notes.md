@@ -7,7 +7,7 @@ The operating system provides a layer of abstraction between the applications an
 It provides protection by preventing one process/user from clobbering another.
 
 **Pre-emption:**
-Give application a resouce, take it away if needed elesewhere.
+Give application a resource, take it away if needed elsewhere.
 
 **Interposition/mediation:**
 Place OS between application and the hardware (like memory).
@@ -39,7 +39,7 @@ Includes information necessary to run
 ![Alt text](image.png)
 
 #### Preemption
-Can preempt aprocess when kernel gets control.
+Can preempt a process when kernel gets control.
 
 Running process can vector control to kernel
 - System call, page fault, illegal instruction etc.
@@ -200,8 +200,8 @@ Assume two thread, $T_0$, $T_1$.
 ```{C}
 for (;;) {
   wants[i] = true;
-  not_turn - i;
-  while(wants[1 - i] && not_turn == i)
+  not_turn = i;
+  while(wants[1 - i] && not_turn == i) {}
     // Other thread wants in and not our turn
   Critical_section();
   wants[i] = false;
@@ -209,7 +209,8 @@ for (;;) {
 }
 ```
 
-`pthread_cond_t` to signal threads to wake up and lock until condition is unlocked.
+`pthread_cond_t` to signal threads to wake up and lock until condition is unlocked.  
+Condition variables are of type `cond_t`.
 
 Always re-check condition on wake-up, since `cond_wait` does not reacquire the lock
 atomically with the wake up. Thus, another thread can come and acquire the lock
@@ -224,6 +225,12 @@ Initialized with an integer $N$.
 `sem_signal(sem_t *s)`
 
 `sem_wait` will only return $N$ more times than `sem_signal` called.
+
+`sem_wait` is basically locking. It decrements internal count. If internal count is zero,
+the calling thread will not return from the call to `sem_wait()` (is blocked) until it either
+locks the semaphore, or the call is interrupted.
+
+`'sem_signal` increments count, basically unlocking.
 
 ## Lecture 5: Synchronization
 

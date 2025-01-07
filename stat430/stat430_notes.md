@@ -771,7 +771,7 @@ We use a simple example to understand the linear model.
 * $\hat\eta=\bar y_{...}$
 * $\hat\alpha_i=\bar y_{i..} - \bar y_{...}$
 * $\hat\beta_j=\bar y_{.j.}-\bar y_{...}$
-* $\hat\omega_{ij}=\hat H_{ij}-\hat\alpha_i-\hat\beta_j-\hat\eta=\bar y_{i..}-\bar y_{.j.}+\bar y_{...}$
+* $\hat\omega_{ij}=\hat H_{ij}-\hat\alpha_i-\hat\beta_j-\hat\eta=\bar y_{ij.} - \bar y_{i..}-\bar y_{.j.}+\bar y_{...}$
 * $r_{ijk}=y_{ijk}-\hat\eta-\alpha_i-\beta_j-\hat\omega_{ij}=y_{ijk}-\bar y_{ij.}$
 
 #### Step 3: ANOVA table
@@ -816,7 +816,7 @@ Strategy: model $E(y)$ and $Var(y)$ in terms of factor levels and apply the
 following two-step procedures:
 
 1. Select the levels of factors that have impact on $Var(y)$ to minimize $Var(y)$
-2. Select the levels of factors that have impact on $E(y), but do not have
+2. Select the levels of factors that have impact on $E(y)$, but do not have
 impact on $Var(y)$, to minimize $Bias(y)$ or move $E(y)$ towards $t$
 
 ### Larger-the-better response
@@ -962,7 +962,7 @@ $$
 \begin{aligned}
 INT(A,B)&=\frac{1}{2}[ME(A|B=+) - ME(A|B=-)] \\
 &=\bar\Xi(AB=+)-\bar\Xi(AB=-) \\
-&=\frac{1}{2^k-1}(x_A\times x_B)^T\Xi
+&=\frac{1}{2^{k-1}}(x_A\times x_B)^T\Xi
 \end{aligned}
 $$
 
@@ -973,7 +973,7 @@ $k$-factor interaction:
 $$
 \begin{aligned}
 INT(A_1,\ldots,A_k)&=\bar\Xi (A_1\ldots A_k=+)-\bar\Xi(A_1\ldots A_k=-) \\
-&=\frac{1}{2^k-1}(x_1\times\dots\times x_k)^T\Xi
+&=\frac{1}{2^{k-1}}(x_1\times\dots\times x_k)^T\Xi
 \end{aligned}
 $$
 
@@ -1285,13 +1285,13 @@ Resolution
 2. We use Roman letter: $\text{III, IV, V}$ to denote it.  
 e.g. $2^{5-2}$ design, $A,B,C,D=AB,E=BC$  
 $A_3=2,A_4=1,A_5=0$  
-$R=\text{III}$ for this example, denoted 2^{5-2}_{\text{III}}
+$R=\text{III}$ for this example, denoted $2^{5-2}_{\text{III}}$
 
 Property of Resolution
 : Resolution = $R$: No $(R-1-C)$ order or lower-order effects are aliased with
 $C$-order effects. intercept = order 0, main effect = order 1, 2fi = order 2, etc.
 
-### Criterion for Selecting $^{k-p}$ designs
+### Criterion for Selecting $2^{k-p}$ designs
 
 1. Maximum resolution criterion
 
@@ -1320,4 +1320,21 @@ same number of times, then the design is called an orthogonal design/array.
 Denoted, $OA(N;s_i1,\ldots,s_j)$ : all designs in this course are orthogonal 
 array/designs.
 
-Why OA? $\textbf{1}$
+Why OA? $\textbf{1}_N$, the matrix for each factor are mutually orthogonal.
+
+## Existence Theorem for OA
+
+Theorem 1
+: For $OA(N;s_1,\ldots,s_k), N$ must be a multiple of $s_1\times s_2,s_1\times s_3,
+\ldots,s_{k-1}\times s_k$ That is, $s_is_j|N$ for $i\neq j$
+
+Reason: Each level combination of 2 factors appears same number of times.
+
+Theorem 2
+: $N\geq 1+\sum_{j=1}^k(s_j-1)=\sum_{j=1}^ks_j-(k-1)$
+
+Reason: $N-1=$ number of parameters that we can estimate.  
+$\sum_{j=1}^k=$ number of covariates that we define for $k$ factors.  
+$\implies N-1\geq\sum_{j=1}^k(s_j-1)$
+
+

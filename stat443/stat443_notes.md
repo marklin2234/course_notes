@@ -153,11 +153,11 @@ The expected value is called the MSE. $MSE(f):=E_{X,Y}(L_{SE}(Y,f(X))) = E_{X,Y}
 #### Conditional Expectation Theorem
 
 If $X$ and $Y$ are two random variables with $E(Y)=\mu$ and $Var(Y)<\infin$, then $f$,
-which minimizes MSE(f), for $X$, $Y$ is given by the conditional expectation.
+which minimizes $MSE(f)$, for $X$, $Y$ is given by the conditional expectation.
 
 ### Absolute Error Loss
 
-$L_{abs}(Y,f(X)):=|Y-f(X)|$ the function which minimizes E_{X,Y}(L_{abs}(Y,f(X))) is
+$L_{abs}(Y,f(X)):=|Y-f(X)|$ the function which minimizes $E_{X,Y}(L_{abs}(Y,f(X)))$ is
 $\hat f(x)=\text{Median}(Y|X=x)$
 
 ### Zero-one loss
@@ -939,7 +939,7 @@ $$
 
 For SE calculation and underlying conditions, refer to Yar and Chatfield (1990).
 
-## Stationarity and Linear Processes
+# Stationarity and Linear Processes
 
 To perform any form of forecasting, there must be an assumption that some
 things are constant over time.  
@@ -948,12 +948,12 @@ frameworks to develop forecast models, we transform/smooth the data
 to reach stationarity, then add the souces of non-stationarity back after
 the forecasting is performed.
 
-### Linear Process
+## Linear Process
 
 Linear time series models are designed to model covariance structure in time
 series.
 
-#### Moving Average Process: $MA(q)$
+### Moving Average Process: $MA(q)$
 
 Suppose $Z_t\sim WN(0,\sigma^2),t\in\Z$, and $\theta(B):=1+\theta_1B+\theta_2B^2+\dots+\theta_qB^q$. Where $B$ is the backwards shift operator. The series
 defined by
@@ -989,7 +989,7 @@ $$
 \rho(h)=\frac{\sum_{j=0}^{q-|h|}\theta_j\theta_{j+|h|}}{\sum_{j=0}^q\theta_j^2}
 $$
 
-### $q$-dependence
+## $q$-dependence
 
 The process $\{X_t,t\in T\}$ is called q-dependent if $X_t$ and $X_s$ are dependent whenever
 $|t-s|=q$ and are independent whenever $|t-s|>q$.
@@ -1013,7 +1013,7 @@ $$
 
 This means if the sample acf is 0 after lag $q$ you can propose $MA(q)$ for that data.
 
-### The Autoregressive Process: $AR(p)$
+## The Autoregressive Process: $AR(p)$
 
 Consider $\{X_t,t\in T\}$ defined by $X_t=\phi X_{t-1}+Z_t$ in which $t=0,\pm1,\pm2,\ldots$ and
 $Z_t\sim WN(0,\sigma^2)$. This process is called first order autoregressive process, $AR(1)$.
@@ -1024,7 +1024,7 @@ The stationarity of the process defined above depends on $\phi$.
 
 $|\phi|=1$ results in a random walk, which is non-stationary.
 
-### The $MA(\infin)$ Process
+## The $MA(\infin)$ Process
 
 Let $\{Z_t\}\sim WN(0,\sigma^2),t\in\Z$. Let $\{\psi_j\},j=0,1,\ldots$ be a sequence which is
 absolutely convergent,
@@ -1048,7 +1048,7 @@ Why MA representation?
 
 Note: $MA(\infty)$ is not $q$-correlated. $\rho(h)=0,\forall h>q$
 
-### Wold Decomposition Theorem
+## Wold Decomposition Theorem
 
 Any stationary process can be written as the sum of $MA(\infty)$ process and an independent
 deterministic process is any process whose complete realization is a deterministic function of
@@ -1070,7 +1070,7 @@ of its own past.
 
 Note: $AR(1)$ can be written as a $MA(\infty)$ process, iff $|\phi|<1$.
 
-### $AR(p)$ Process
+## $AR(p)$ Process
 
 Define the polynomial operator $\phi(B)$:
 
@@ -1116,7 +1116,7 @@ $$
 \rho(h)=\frac{\sum_{j=0}^\infty\psi_j\psi_{j+|h|}}{\sum_{j=0}^\infty\psi_j^2}
 $$
 
-### Linear Processes
+## Linear Processes
 
 A time series $\{X_t,t\in T\}$ is called to be a linear process if $X_t$ can be written as
 
@@ -1131,7 +1131,7 @@ Or, in english, as a linear combination of white noise subject to convergence.
 
 The summation in $X_t$ has infinite number of terms, so a convergence criterion is needed.
 
-* $\sum_{j=-\infty}^\infty a_j$ is called absolutely convergent if $\sum_{-\infty}^infty|a_j|<\infty$
+* $\sum_{j=-\infty}^\infty a_j$ is called absolutely convergent if $\sum_{-\infty}^\infty|a_j|<\infty$
 
 All $MA(q)$ processes are linear.
 
@@ -1143,7 +1143,7 @@ However, the general definition of linear processes include future innovations.
 A causal process $\{X_t\}$ generated $\{Z_t\}\sim WN(0,\sigma^2)$ is one where each $X_t$ is only
 a function of those $Z_s$ where $s\leq t$.
 
-A linear process is called causal if $\psi_j=0$,\forall j<0$.
+A linear process is called causal if $\psi_j=0,\forall j<0$.
 
 Ex.
 
@@ -1172,9 +1172,9 @@ X_1|X_2=x_2&\sim N\Big(\mu_1+\frac{\sigma_{12}}{\sigma_2^2}(x_2-\mu_2),\sigma_1^
 \end{aligned}
 $$
 
-### Linear Prediction
+## Linear Prediction
 
-#### Motivation
+### Motivation
 
 Predictors of the form $\hat X_{n+h}=aX_n+b$, which predict the future as a linear function of
 history, are interesting. $\hat X_{n+h}$ is a linear predictor.
@@ -1210,7 +1210,7 @@ $$
 \underbrace{P_nX_{n+h}}_{\hat X_{n+h}}=\mu+\sum_{j=1}^na_j(X_{n+1-j}-\mu) = a_0+a_1X_n+\dots+a_nX_n
 $$
 
-where $\mu=E(X_t),a_0=\mu(1-\sum_{i=1}^na_i)$, and $\Gamma_n\textbf{a}_n-\gamma_n(h)$
+where $\mu=E(X_t),a_0=\mu(1-\sum_{i=1}^na_i)$, and $\Gamma_n\textbf{a}_n=\gamma_n(h)$
 
 where $\textbf{a}_n=(a_1,a_2,\ldots,a_n)^T$,
 
@@ -1249,7 +1249,7 @@ to predict the value of another variable $Y$.
 * While linear predictors are not always optimal in a general case, they are optimal for linear
 processes.
 
-## Box and Jenkins Models
+# Box and Jenkins Models
 
 "All models are wrong, but some are useful."
 
@@ -1288,5 +1288,383 @@ The general model in equation (1) has a unique stationary solution for $X_t$
 if none of the roots of $\phi(z)$ are on the unit root circle, i.e.
 
 $$
-\Phi(z)\neq 0\;\forall z\in\C:\;|z|=1
+\Phi(z)\neq 0\;\forall z\in\Complex:\;|z|=1
 $$
+
+#### Special Cases
+
+1. $\Phi(B)=1$ implies $MA(q)=ARMA(0,q)$
+2. $\Theta(B)=1$ implies $AR(p)=ARMA(p,0)$
+3. $\Phi(B)=\Theta(B)=1$ implies white noise = $ARMA(0,0)$
+
+#### Causality
+
+An $ARMA(p,q)$ process $\Phi(B)X_t=\Theta(B)Z_t$ where $Z_t\sim WN(0,\sigma^2)$
+is causal if there exists constants $\{\psi_j\}$ such that:
+
+1. $\sum_{j=0}^\infty|\psi_j|<\infty$
+2. $X_t=\sum_{j=0}^\infty \psi_jZ_{t-j},\forall t$
+
+---
+
+There two conditions are equivalent to
+
+$$
+\Phi(z)=1-\phi_1z-\dots-\phi_pz^p\neq 0\;\forall z\in\cnums : |z|\leq 1
+$$
+
+In other words, causality = $\Phi(z)$ has no roots on or inside the unit circle.  
+causality $\implies$ stationarity.
+
+Causality and stationarity for $ARMA$ processes is checking roots of $\Phi(z)$.
+
+Defining $\frac{\Theta(z)}{\Phi(z)}=\Psi(z)$, we get $\Theta(z)=\Phi(z)\Psi(z)$.  
+That is:
+
+$$
+1+\theta_1z+\dots+\theta_qz^q=(1-\phi_1z-\dots\phi_pz^p)(\psi_0+\psi_1z\dots),\forall z
+$$
+
+$\implies \psi=1,\psi_1-\psi_0\phi_1=\theta_1,\dots\implies$ all coefs
+of same degrees are equal on both sides. We will use this equality to find
+the causal solution or the MA representation of a process.
+
+The causal solution (MA representation) is:
+
+$$
+X_t=\sum_{j=0}^\infty\psi_jZ_{t-j}
+$$
+
+and is also referred to as the MA representation of the stationary process
+$\{X_t\}$.
+
+#### Invertibility of $ARMA(p,q)$
+
+Causal solution of an $ARMA$ process is writing it as an MA process.  
+Similarly, one may ask if there exists an AR representation of an $ARMA$ process.
+This is called the invertibility condition.
+
+An $ARMA(p,q)$ process $\Phi(B)X_t=\Theta(B)Z_t$ where $Z_t\sim WN(0,\sigma^2)$
+is invertible if there exist constants $\{\pi_j\}$ s.t.
+
+1. $\sum_{j=0}^\infty |\pi_j|<\infty$
+2. $Z_t=\sum_{j=0}^\infty \pi_jX_{t=j},\forall t$
+
+---
+
+Equivalently,
+
+$$
+\Theta(z)=1+\theta_1z+\dots+\theta_qz^q\neq 0\;\forall z\in\cnums : |z|\leq 1
+$$
+
+Invertibility = $\Theta(z)$ has no roots on or inside the unit circle.
+
+$$
+\Phi(B)X_t=\Theta(B)Z_t \\
+\implies Z_t=\frac{\Phi(B)}{\Theta(B)}X_t\implies Z_t=\pi(B)X_t\implies Z_t=\sum_{j=0}^\infty \pi_jX_{t-j}
+$$
+
+This is called the invertible solution (AR representation) of the stationary
+process $\{X_t\}$.
+
+We use the causal solution t o derive acf.  
+We use the invertible solution to derive pacf.
+
+### ACVF of $ARMA(p,q)$
+
+Consider a causal and stationary process:  
+$\Phi(B)X_t=\Theta(B)Z_t,Z_t\sim WN(0,\sigma^2)$ with the $MA(\infty)$
+representation $X_t=\sum_{j=0}^\infty\psi_jZ_{t-j}$.
+
+Note that $E(X_t)=0,\forall t$. Then,
+
+$$
+\begin{aligned}
+\gamma(h)&=E(X_tX_{t+h}) & \text{recall: } Cov(X,Y)=E[XY]-E[X]E[Y] \\
+&=E\Bigg(\sum_{j=0}^\infty\psi_jZ_{t-j}\sum_{i=0}^\infty\psi_iZ_{t+h-i}\Bigg) \\
+\forall |h|>=0 : \gamma(h)&=\sum_{j=0}^\infty \psi_j\psi_{j+|h|}E(Z_j^2) + 0 = \sigma^2\sum_{j=0}^\infty\psi_j\psi_{j+|h|} \\
+\rho(h)&=\frac{\gamma(h)}{\gamma(0)} = \frac{\sum_{j=0}^\infty\psi_j\psi_{j+|h|}}{\sum_{j=0}^\infty\psi_j}
+\end{aligned}
+$$
+
+### Partial Auto-covariance
+
+$MA(q)$ being q-correlated, its ACF cuts off after lag $q$. This is a
+signature of $MA(q)$.  
+All we could say about the ACF of an AR process is that it decays exponentially
+(direct or damped sine wave)  
+This shows the shortcomings of ACF in identifying the order $p$ in an $AR(p)$
+process.  
+A function which shows a similar trend for $AR$ processes as ACF shows for $MA$
+processes is necessary. These are called Partial autocorrelation function (PACF).
+
+Covariance $\rightarrow$ Auto-covariance $\rightarrow$ Auto-correlation  
+Partial Covariance $\rightarrow$ Partial Auto-covariance $\rightarrow$
+Partial Auto-correlation
+
+## Partial Autocorrelation Function
+
+The ACF of a stationary process measures the correlation between $X_n$ and
+$X_{n+h}$. This correlation can be:
+
+* Direct connection between $X_n$ and $X_{n+h}$
+* Through the intermediate steps.
+
+ACF does not tell us which one.
+
+The PACF looks at the direct correlation between $X_n$ and $X_{n+h}$ once
+the effect of intermediate steps $X_{n+1},\dots+X_{n+h-1}$ are removed.
+
+The effect or information in the intermediate steps can be quantified by
+$Pred(X_{n+h}|X_{n+1},\ldots,X_{n+h-1})$ and $Pred(X_n|X_{n+1},\ldots,X_{n+h-1})$.
+(Best linear predictors of $X_{n+h}, X_n$.
+
+Partial AUtocorrelation Function (PACF)
+: The PACF for a stationary process $\{X_t\}$ is defined by:
+
+$$
+\alpha(h)=\begin{cases}
+1 & h=0 \\
+Cor(X_{n+1},X_n) & |h|=1 \\
+\rho_{x_{n+h}},x_n\cdot\{X_{n+1}\dots X_{n+h-1} & |h| > 1
+\end{cases}
+$$
+
+where $\rho_{x_{n+h}},x_n\cdot\{X_{n+1}\dots X_{n+h-1}$ is the partial correlation
+of $X_{n+h}$ and $X_n$ given the set $\{X_{n+1}\ldots X_{n+h-1}\}$, i.e.
+
+$$
+\begin{aligned}
+\rho_{x_{n+h}},x_n\cdot\{X_{n+1}\dots X_{n+h-1}&=Cor(X_n,X_{n+h}|X_{n+1}\dots X_{n+h-1}) \\
+&= Cor(X_n - Pred(X_n|X_{n+1},\ldots,X_{n+h-1}), \\
+& \qquad\qquad X_{n+h}-Pred(X_{n+h}|X_{n+1},\ldots,X_{n+h-1}))
+\end{aligned}
+$$
+
+### Deriving PACF
+
+$$
+\alpha(0) = 1, \alpha(h)=\Phi_{hh} \qquad h\geq 1
+$$
+
+where $\Phi_{hh}$ is the last component of the vector $\phi_h=\Gamma_h^{-1}\gamma_h$ in which $\Gamma_h=\Bigg[\gamma(i-j)\Bigg]^h_{i,j=1}$ and
+$\gamma_h=(\gamma(1),\gamma(2),\ldots,\gamma(h))$.
+
+Given the data $\{x_1,\ldots,x_n\}$, the sample PACF is estimated by
+
+$$
+\hat\alpha(0)=1,\hat\alpha(h)=\hat\phi_{hh} \qquad h\geq 1
+$$
+
+where $\hat\phi_{hh}$ is the last component of the vector $\hat\phi_h=\hat\gamma_h^{-1}\hat\gamma_h$
+
+This takes many steps: We can actually combine/summarize the calculations in
+a recursive manner.
+
+#### Recursive Formula for PACF
+
+For a stationary time series with autocorrelation function $\rho(h)$, the
+following recursive formula can be used to compute the PACF $\alpha(h)$:
+
+$$
+\alpha(h)=\phi_{hh}=\frac{\rho(h)-\sum_{j=1}^{h-1}\phi_{h-1,j}\rho(h-j)}{1-\sum_{j=1}^{h-1}\phi_{h-1,j}\rho(j)}
+$$
+
+where $\phi_{11}=\rho(1)$ and $\phi_{hj}=\phi_{h-1,j}-\phi_{hh}\phi_{h-1,j},j=1,2,\ldots,h-1$.
+
+Theorem
+: Consider a $\{X_t,t\in T\}$ with the PACF $\alpha(\cdot)$. This process
+is a causal $AR(p)$ process iff $\alpha(p)\neq 0$ and $\alpha(h)=0.\forall h>p$.
+Furthermore, $\alpha(p)=\phi_p$.
+
+| | ACF | PACF |
+| --- | --- | --- |
+| $MA(q)$ | cuts off after lag $q$ | exponential decay and/or damped sinusoid |
+| $AR(p)$ | exponential decay and/or damped sinusoid | cuts off after lag $p$ |
+| $ARMA(p,q)$ | exponential decay and/or damped sinusoid | exponential decay and/or damped sinusoid |
+
+## $ARIMA(p,d,q)$ Process
+
+Let $d$ be a non-negtive integer. $\{X_t,t\in T\}$ is an $ARIMA(p,d,q)$ process
+if $Y_t:=(1-B)^dX_t$ is a causal $ARMA(p,q)$ process.
+
+$X_t$ satisfies the equation:
+
+$$
+\underbrace{\Phi(B)(1-B)^d}_{\Phi^*(B)}X_t=\Theta(B)Z_t, Z_t\sim WN(0,\sigma^2)
+$$
+
+where $\Phi^*(B)\to \Phi^*(z)=\Phi(z)(1-z)^d$. Note that if $d\neq 0$, then
+$\Phi^*(z)=0$ for $z=1$ which implies non-stationarity of $X_t$.
+
+This model only deals with non-stationarity due to non-constant mean.
+
+For non-stationarity due to non-constant variance, one should use transformations
+and/or other types of models (ARCH/GARCH).
+
+We can also remove seasonality by seasonal differencing in lag $s$, and the
+remaining series is stationary. The stationary series can be then modelled
+using an $ARMA$ process.
+
+Fitting an $ARMA(p,q)$ model to the differenced series $Y_t=(1-B^s)X_t$ is 
+the same as fitting the model.
+
+$$
+\Phi(B)(1-B^s)X_t=\Theta(B)Z_t,Z_t\sim WN(0,\sigma^2)
+$$
+
+## Seasonal $ARIMA$ Model (SARIMA)
+
+If $d$ and $D$ are non-negative integers, then $\{X_t,t\in T\}$ is a
+$SARIMA(p,d,q)\times (P,D,Q)_s$ process with period $s$ if the differenced
+series
+
+$$
+Y_t:=\nabla^d\nabla_s^DX_t=(1-B)^d(1-B^s)^DX_t
+$$
+
+is a causal $ARMA$ process defined by
+
+$$
+\Phi(B)\Phi^*(B^s)Y_t=\Theta(B)\Theta^*(B^s)Z_t, Z_t\sim WN(0,\sigma^2)
+$$
+
+where,
+
+* $\Phi(z)=1-\phi_1z-\phi_2z^2-\dots-\phi_pz^p$
+* $\Phi^*(z)=1-\phi_1^*z-\phi_2^*z^2-\dots-\phi_P^*z^P$
+* $\Theta(z)=1+\theta_1z+\theta_2z^2+\dots+\theta_qz^q$
+* $\Theta^*(z)=1+\theta_1^*z+\theta_2^*z^2+\dots+\theta_Q^*z^Q$
+
+A $SARIMA$ model is superimposing two $ARIMA$ models: one of regular lags,
+and the other on the seasonal lags. Note that the correlation among
+observations apart by lags of the season does not necessarily imply a seasonal
+trend and can itself by modelled using an $ARMA$ process. This is the
+seasonal part of $SARIMA$ models.
+
+Note that the process $\{Y_t,t\in T\}$ is causal iff
+
+$$
+\Phi(z)\neq 0 \text{ AND } \Phi^*(z^s)\neq 0\qquad \forall z: |z|\leq 1
+$$
+
+In practice $d$ is at most 3 (usually 1 or 2) and $D$ is rarely more than 1.
+$P$ and $Q$ are typically less than 3.
+
+### Box-Jenkins Methodology and Fitting to Data
+
+1. Plot the data and its ACF to check for stationarity (variance, trend, seasonality). Fix non-constant variance first.
+2. Difference (regular and seasonal) to achieve stationarity. This step
+identifies $d,s, D$ (s might be from step 1).
+3. Pick some potential values for $p,q,P$ and $Q$ based on acf and pacf plots
+of the differenced data.
+4. Using model selection techniques, choose the most appropriate model among
+those in step 3.
+
+## Parameter Estimation
+
+Estimating:  
+AR parameters $\phi_1,\ldots,\phi_p$  
+MA parameters $\theta_1,\ldots,\theta_q$  
+Variance of white noise $\sigma^2$
+
+Need to estimate $p+q+1$ parameters. Can use Maximum likelihood, (partial) least
+squares, Yule-Walker (for AR processes only)
+
+For simplicity, assume that $E(X_t)=\mu=0$. If this assumption is incorrect,
+then one can work with the centralized process $Y_t=X_t-\hat\mu$.
+
+### Likelihood Methods
+
+We must assume $Z_t\stackrel{iid}{\sim} N(0,\sigma^2)$. This implies that
+the data is multivariate Normal.  
+Causal Processes $\to X_t=\sum_{j=0}^\infty\theta_jZ_{t-j}$ (Gaussian Process)
+
+### Gaussian Likelihood Function
+
+The likelihood function for a mean zero, stationary Gaussian $ARMA(p,q)$ process
+is:
+
+$$
+Lik(\phi_1,\ldots,\phi_p,\theta_1,\ldots,\theta_q,\sigma^2)=\frac{1}{(2\pi)^{n/2}det(\Gamma_n)^{1/2}}exp\Bigg(-\frac{1}{2}\textbf{X}^T\Gamma_n^{-1}\textbf{X}\Bigg)
+$$
+
+where $\Gamma_n$ is a variance-covariance matrix for $\textbf{X}$ of the form:
+
+$$
+\begin{pmatrix}
+\gamma(0) & \gamma(1) & \dots & \gamma(n-1) \\
+\gamma(1) & \gamma(0) & \dots & \gamma(n-2) \\
+\vdots & \vdots & \vdots & \vdots \\
+\gamma(n-1) & \gamma(n-2) & \dots & \gamma(0)
+\end{pmatrix}_{n\times n}
+$$
+
+To obtain the MLE of the parameters, the likelihood function will be maximized
+relative to the parameters. Note that $\gamma(h)$ and hence $\Gamma_n$ depends
+on these parameters.
+
+#### Steps to Obtain MLEs of $ARMA(p,q)$
+
+* Writing $\gamma(h)$ (hence $\Gamma_h$) as a function of $\phi_1,\ldots,\phi_p,\theta_1,\ldots,\theta_q$ and $\sigma^2$
+* Inverting the $\Gamma_n$
+* Optimizing the likelihood function to get $MLE(phi_1,\ldots,\phi_p,\theta_1,\ldots,\theta_q)$. We will also estimate $\sigma^2$ with the mean squares of
+residuals, similar to what was done in regression.
+
+### Yule-Walker Estimation for $AR(p)$
+
+Consider the causal $AR(p)$ process
+
+$$
+X_t-\phi_1X_{t-1}-\dots-\phi_pX_{t-p}=Z_t
+$$
+
+with the causal solution $X_t=\sum_{j=0}^\infty\psi_jZ_{t-j}$ in which
+$Z_t\sim WN(0,\sigma^2)$. Interest lies in estimating $\Phi=(\phi_1,\ldots\phi_p)$
+and $\sigma^2$.
+
+This is a moment method starting by multiplying both sides of the $AR$ process
+by $X_{t-j},j=0,1,\ldots, p$ and taking the expectation.
+
+#### Sample Yule-Walker Equations for $AR(p)$
+
+Using the sample estimate of ACVF, we get:
+
+$$
+\hat\Phi=\hat\Gamma_p^{-1}\hat\gamma_p,\hat\sigma^2=\hat\gamma(0)-\hat\Phi^T\hat\gamma_p
+$$
+
+equivalently, diving both sides of $\Gamma_p\Phi=\gamma_p$ by $\gamma(0)$, we get
+
+$$
+\hat\Phi=\hat R_p^{-1}\hat\rho_p,\hat\sigma^2=\hat\gamma(0)(-\hat\Phi^T\hat\rho_p)
+$$
+
+where:
+
+$$
+\hat\gamma_p=\begin{pmatrix}\hat\gamma(1) \\ \hat\gamma(2) \\ \vdots \\ \hat\gamma(p) \end{pmatrix},\hat\Gamma_p^{-1}=\begin{pmatrix}\hat\gamma(0) & \hat\gamma(1) & \dots & \hat\gamma(p-1) \\ & \hat\gamma(0) & \dots & \hat\gamma(p-2) \\ & & \ddots & \vdots \\ & & & \hat\gamma(0) \end{pmatrix}
+$$
+
+and $\hat R_p=\hat\Gamma_p/\hat\gamma(0)=[\hat\rho(i-j)]^p_{i,j=1}$
+
+For a large sample size,
+
+$$
+\text{Yule-Walker estimator}=\tilde\Phi=\begin{pmatrix}\tilde\phi_1 \\ \tilde\phi_2 \\ \vdots \\ \tilde\phi_p \end{pmatrix}\sim MVN(\Phi,\frac{\sigma^2}{n}\Gamma^{-1}_p)
+$$
+
+For large sample sizes, we can even replace $\sigma^2$ and $\Gamma_p$ with 
+their sample estimates and use this result for large-sample confidence intervals
+for $\Phi$.
+
+## Forecasting in ARMA
+
+Want to minimize $MSE=E[(X_{n+h}-\hat X_{n+h})^2|X_1,\ldots,X_n]$ where
+we have shown that $\hat X_{n+h}=E(X_{n+h}|X_1,\ldots,X_n)$.
+
+Since ARMA processes are linear, we will see that this conditional expectation
+turns into the best linear predictor, $\hat X_{n+h}=P_nX_{n+h}$.
+
+
